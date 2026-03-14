@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head><title>API — /api/users</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0d1117; color:#c9d1d9; font-family:'IBM Plex Sans',sans-serif; }
+.topbar { background:#161b22; border-bottom:1px solid #30363d; padding:12px 24px; display:flex; justify-content:space-between; align-items:center; }
+.logo { color:#ff6600; font-weight:700; font-size:16px; }
+.sidebar { position:fixed; left:0; top:53px; bottom:0; width:200px; background:#161b22; border-right:1px solid #30363d; padding:20px 0; }
+.sidebar a { display:block; padding:10px 20px; color:#8b949e; text-decoration:none; font-size:13px; }
+.sidebar a:hover { color:#ff6600; }
+.sidebar a.active { color:#ff6600; border-left:2px solid #ff6600; }
+.main { margin-left:200px; padding:24px; }
+.api-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+.method { background:rgba(0,229,153,0.1); color:#00e599; font-size:11px; font-weight:700; padding:4px 10px; border-radius:4px; font-family:'JetBrains Mono',monospace; border:1px solid rgba(0,229,153,0.2); }
+.endpoint { font-family:'JetBrains Mono',monospace; font-size:14px; color:#e6edf3; background:#21262d; padding:6px 14px; border-radius:4px; border:1px solid #30363d; }
+.status { font-family:'JetBrains Mono',monospace; font-size:11px; color:#00e599; background:rgba(0,229,153,0.08); border:1px solid rgba(0,229,153,0.2); padding:4px 10px; border-radius:4px; }
+.warning-banner { background:rgba(255,59,59,0.08); border:1px solid rgba(255,59,59,0.2); border-radius:6px; padding:10px 16px; margin-bottom:20px; font-size:12px; color:#ff3b3b; font-family:'JetBrains Mono',monospace; }
+.response-box { background:#161b22; border:1px solid #30363d; border-radius:8px; overflow:hidden; }
+.response-header { background:#21262d; padding:10px 16px; display:flex; justify-content:space-between; border-bottom:1px solid #30363d; }
+.response-label { font-size:11px; color:#8b949e; font-family:'JetBrains Mono',monospace; }
+pre { padding:20px; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.8; overflow-x:auto; }
+.key { color:#7ee787; }
+.str { color:#a5d6ff; }
+.str.sensitive { color:#ffa657; }
+.num { color:#79c0ff; }
+.bool { color:#ff7b72; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">✈ Thomas Cook Admin</div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8b949e;">REST API Explorer</div>
+</div>
+
+<div class="sidebar">
+  <a href="/admin/dashboard">📊 Dashboard</a>
+  <a href="/api/users" class="active">👥 Users</a>
+  <a href="/bookings">📦 Bookings</a>
+  <a href="/flights">✈ Flights</a>
+  <a href="/hotels">🏨 Hotels</a>
+  <a href="/payments">💳 Payments</a>
+  <a href="/config.php">⚙ Config</a>
+  <a href="/backup.zip">💾 Backup</a>
+  <a href="/server-status">🖥 Server</a>
+</div>
+
+<div class="main">
+  <div class="api-header">
+    <span class="method">GET</span>
+    <span class="endpoint">/api/users</span>
+    <span class="status">200 OK</span>
+  </div>
+
+  <div class="warning-banner">
+    ⚠ SENSITIVE — Contains password hashes and user credentials
+  </div>
+
+  <div class="response-box">
+    <div class="response-header">
+      <span class="response-label">Response Body — application/json</span>
+      <span class="response-label">3 records returned</span>
+    </div>
+    <pre>{
+  <span class="key">"status"</span>: <span class="str">"200 OK"</span>,
+  <span class="key">"total"</span>: <span class="num">3291</span>,
+  <span class="key">"data"</span>: [
+    {
+      <span class="key">"id"</span>: <span class="num">1</span>,
+      <span class="key">"username"</span>: <span class="str sensitive">"admin"</span>,
+      <span class="key">"email"</span>: <span class="str sensitive">"admin@thomascook.com"</span>,
+      <span class="key">"role"</span>: <span class="str sensitive">"superadmin"</span>,
+      <span class="key">"password_hash"</span>: <span class="str sensitive">"e10adc3949ba59abbe56e057f20f883e"</span>,
+      <span class="key">"last_login"</span>: <span class="str">"2026-03-10T09:23:11Z"</span>,
+      <span class="key">"status"</span>: <span class="bool">active</span>
+    },
+    {
+      <span class="key">"id"</span>: <span class="num">2</span>,
+      <span class="key">"username"</span>: <span class="str sensitive">"ops_manager"</span>,
+      <span class="key">"email"</span>: <span class="str sensitive">"ops@thomascook.com"</span>,
+      <span class="key">"role"</span>: <span class="str sensitive">"manager"</span>,
+      <span class="key">"password_hash"</span>: <span class="str sensitive">"5f4dcc3b5aa765d61d8327deb882cf99"</span>,
+      <span class="key">"last_login"</span>: <span class="str">"2026-03-10T08:45:22Z"</span>,
+      <span class="key">"status"</span>: <span class="bool">active</span>
+    },
+    {
+      <span class="key">"id"</span>: <span class="num">3</span>,
+      <span class="key">"username"</span>: <span class="str sensitive">"finance_head"</span>,
+      <span class="key">"email"</span>: <span class="str sensitive">"finance@thomascook.com"</span>,
+      <span class="key">"role"</span>: <span class="str sensitive">"finance"</span>,
+      <span class="key">"password_hash"</span>: <span class="str sensitive">"d8578edf8458ce06fbc5bb76a58c5ca4"</span>,
+      <span class="key">"last_login"</span>: <span class="str">"2026-03-09T17:12:05Z"</span>,
+      <span class="key">"status"</span>: <span class="bool">active</span>
+    }
+  ]
+}</pre>
+  </div>
+</div>
+
+</body>
+</html>

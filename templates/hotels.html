@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head><title>Thomas Cook — Hotels</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0c10; color:#c8d0e0; font-family:'IBM Plex Sans',sans-serif; }
+.topbar { background:#111318; border-bottom:1px solid #1e2229; padding:14px 24px; display:flex; justify-content:space-between; }
+.logo { color:#ff6600; font-weight:700; font-size:18px; }
+.user-info { font-size:12px; color:#4a5568; }
+.sidebar { position:fixed; left:0; top:53px; bottom:0; width:200px; background:#111318; border-right:1px solid #1e2229; padding:20px 0; }
+.sidebar a { display:block; padding:10px 20px; color:#4a5568; text-decoration:none; font-size:13px; }
+.sidebar a:hover { color:#ff6600; }
+.sidebar a.active { color:#ff6600; border-left:2px solid #ff6600; }
+.main { margin-left:200px; padding:24px; }
+.page-title { font-size:20px; font-weight:600; margin-bottom:20px; color:#e2e8f0; }
+.hotel-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.hotel-card { background:#111318; border:1px solid #1e2229; border-radius:8px; padding:20px; }
+.hotel-name { font-size:15px; font-weight:600; color:#e2e8f0; margin-bottom:6px; }
+.hotel-loc { font-size:12px; color:#4a5568; margin-bottom:10px; }
+.hotel-price { font-size:18px; font-weight:700; color:#ff6600; }
+.hotel-price span { font-size:11px; color:#4a5568; }
+.stars { color:#ffd166; margin-bottom:8px; }
+.rooms { font-size:11px; color:#00e599; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">✈ Thomas Cook Admin</div>
+  <div class="user-info">Logged in as: admin@thomascook.com</div>
+</div>
+<div class="sidebar">
+  <a href="/admin/dashboard">📊 Dashboard</a>
+  <a href="/api/users">👥 Users</a>
+  <a href="/bookings">📦 Bookings</a>
+  <a href="/flights">✈ Flights</a>
+  <a href="/hotels" class="active">🏨 Hotels</a>
+  <a href="/payments">💳 Payments</a>
+  <a href="/config.php">⚙ Config</a>
+  <a href="/backup.zip">💾 Backup</a>
+  <a href="/server-status">🖥 Server</a>
+</div>
+<div class="main">
+  <div class="page-title">🏨 Hotel Inventory</div>
+  <div class="hotel-grid">
+    <div class="hotel-card">
+      <div class="hotel-name">Atlantis The Palm</div>
+      <div class="hotel-loc">📍 Dubai, UAE</div>
+      <div class="stars">★★★★★</div>
+      <div class="hotel-price">₹28,000 <span>/night</span></div>
+      <div class="rooms">✅ 14 rooms available</div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-name">Marina Bay Sands</div>
+      <div class="hotel-loc">📍 Singapore</div>
+      <div class="stars">★★★★★</div>
+      <div class="hotel-price">₹32,000 <span>/night</span></div>
+      <div class="rooms">✅ 8 rooms available</div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-name">Anantara Veli</div>
+      <div class="hotel-loc">📍 Maldives</div>
+      <div class="stars">★★★★★</div>
+      <div class="hotel-price">₹45,000 <span>/night</span></div>
+      <div class="rooms">⚠ 3 rooms left</div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-name">The Ritz London</div>
+      <div class="hotel-loc">📍 London, UK</div>
+      <div class="stars">★★★★★</div>
+      <div class="hotel-price">₹52,000 <span>/night</span></div>
+      <div class="rooms">✅ 11 rooms available</div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-name">Centara Grand</div>
+      <div class="hotel-loc">📍 Bangkok, Thailand</div>
+      <div class="stars">★★★★</div>
+      <div class="hotel-price">₹12,000 <span>/night</span></div>
+      <div class="rooms">✅ 22 rooms available</div>
+    </div>
+    <div class="hotel-card">
+      <div class="hotel-name">Park Hyatt Tokyo</div>
+      <div class="hotel-loc">📍 Tokyo, Japan</div>
+      <div class="stars">★★★★★</div>
+      <div class="hotel-price">₹38,000 <span>/night</span></div>
+      <div class="rooms">⚠ 2 rooms left</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

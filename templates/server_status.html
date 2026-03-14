@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head><title>Server Status</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0c10; color:#c8d0e0; font-family:'Courier New',monospace; padding:30px; font-size:13px; }
+h2 { color:#00e599; margin-bottom:20px; }
+.item { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #1e2229; }
+.label { color:#4a5568; }
+.val { color:#00e599; }
+.val.warn { color:#ff8c42; }
+.val.bad { color:#ff3b6e; }
+</style>
+</head>
+<body>
+<h2>🖥 Thomas Cook — Server Status</h2>
+<div class="item"><span class="label">Server IP</span><span class="val">192.168.1.100</span></div>
+<div class="item"><span class="label">OS</span><span class="val">Ubuntu 20.04 LTS</span></div>
+<div class="item"><span class="label">Apache</span><span class="val">2.4.51 — Running</span></div>
+<div class="item"><span class="label">MySQL</span><span class="val">8.0.27 — Running</span></div>
+<div class="item"><span class="label">PHP</span><span class="val">7.4.26</span></div>
+<div class="item"><span class="label">CPU Load</span><span class="val warn">67%</span></div>
+<div class="item"><span class="label">RAM Usage</span><span class="val warn">4.2 GB / 8 GB</span></div>
+<div class="item"><span class="label">Disk Usage</span><span class="val bad">891 GB / 1 TB</span></div>
+<div class="item"><span class="label">Uptime</span><span class="val">47 days, 3 hours</span></div>
+<div class="item"><span class="label">Last Backup</span><span class="val">2026-03-10 02:00 AM</span></div>
+<div class="item"><span class="label">Open Ports</span><span class="val">22, 80, 443, 3306, 8080</span></div>
+</body>
+</html>

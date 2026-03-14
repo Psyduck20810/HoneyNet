@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Thomas Cook — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0c10; color:#c8d0e0; font-family:'IBM Plex Sans',sans-serif; }
+.topbar { background:#111318; border-bottom:1px solid #1e2229; padding:14px 24px; display:flex; justify-content:space-between; align-items:center; }
+.logo { color:#ff6600; font-weight:700; font-size:18px; }
+.user-info { font-size:12px; color:#4a5568; }
+.sidebar { position:fixed; left:0; top:53px; bottom:0; width:200px; background:#111318; border-right:1px solid #1e2229; padding:20px 0; }
+.sidebar a { display:block; padding:10px 20px; color:#4a5568; text-decoration:none; font-size:13px; transition:all 0.2s; }
+.sidebar a:hover { color:#ff6600; background:rgba(255,102,0,0.05); }
+.sidebar a.active { color:#ff6600; border-left:2px solid #ff6600; }
+.main { margin-left:200px; padding:24px; }
+.page-title { font-size:20px; font-weight:600; margin-bottom:20px; color:#e2e8f0; }
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat { background:#111318; border:1px solid #1e2229; border-radius:8px; padding:20px; }
+.stat-label { font-size:11px; color:#4a5568; margin-bottom:8px; text-transform:uppercase; }
+.stat-val { font-size:28px; font-weight:700; color:#e2e8f0; }
+.stat-sub { font-size:11px; color:#4a5568; margin-top:4px; }
+table { width:100%; border-collapse:collapse; background:#111318; border:1px solid #1e2229; border-radius:8px; overflow:hidden; }
+th { background:#1a2035; padding:12px 16px; text-align:left; font-size:11px; color:#4a5568; text-transform:uppercase; letter-spacing:0.05em; }
+td { padding:12px 16px; border-bottom:1px solid #1e2229; font-size:13px; }
+tr:last-child td { border-bottom:none; }
+.badge { padding:3px 8px; border-radius:3px; font-size:10px; font-weight:600; }
+.badge.active { background:rgba(0,229,153,0.1); color:#00e599; }
+.badge.pending { background:rgba(255,140,66,0.1); color:#ff8c42; }
+.section-title { font-size:13px; font-weight:600; color:#e2e8f0; margin:24px 0 12px; text-transform:uppercase; letter-spacing:0.05em; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">✈ Thomas Cook Admin</div>
+  <div class="user-info">Logged in as: admin@thomascook.com | Last login: Today 09:23 AM</div>
+</div>
+
+<div class="sidebar">
+  <a href="/admin/dashboard" class="active">📊 Dashboard</a>
+  <a href="/api/users">👥 Users</a>
+  <a href="/bookings">📦 Bookings</a>
+  <a href="/flights">✈ Flights</a>
+  <a href="/hotels">🏨 Hotels</a>
+  <a href="/payments">💳 Payments</a>
+  <a href="/config.php">⚙ Config</a>
+  <a href="/backup.zip">💾 Backup</a>
+  <a href="/server-status">🖥 Server</a>
+</div>
+<div class="main">
+  <div class="page-title">Operations Dashboard</div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Total Bookings</div>
+      <div class="stat-val">14,823</div>
+      <div class="stat-sub">↑ 12% this month</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Active Users</div>
+      <div class="stat-val">3,291</div>
+      <div class="stat-sub">Online right now</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Revenue</div>
+      <div class="stat-val">₹48.2L</div>
+      <div class="stat-sub">This month</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Pending</div>
+      <div class="stat-val">127</div>
+      <div class="stat-sub">Awaiting approval</div>
+    </div>
+  </div>
+
+  <div class="section-title">Recent Bookings</div>
+  <table>
+    <tr>
+      <th>Booking ID</th>
+      <th>Customer</th>
+      <th>Destination</th>
+      <th>Amount</th>
+      <th>Status</th>
+    </tr>
+    <tr><td>TC-2026-8821</td><td>Rahul Sharma</td><td>Dubai</td><td>₹85,000</td><td><span class="badge active">Confirmed</span></td></tr>
+    <tr><td>TC-2026-8820</td><td>Priya Patel</td><td>Singapore</td><td>₹72,500</td><td><span class="badge active">Confirmed</span></td></tr>
+    <tr><td>TC-2026-8819</td><td>Amit Kumar</td><td>Thailand</td><td>₹45,000</td><td><span class="badge pending">Pending</span></td></tr>
+    <tr><td>TC-2026-8818</td><td>Sneha Reddy</td><td>Maldives</td><td>₹1,20,000</td><td><span class="badge active">Confirmed</span></td></tr>
+    <tr><td>TC-2026-8817</td><td>Vikram Singh</td><td>Europe</td><td>₹1,85,000</td><td><span class="badge pending">Pending</span></td></tr>
+  </table>
+</div>
+
+</body>
+</html>

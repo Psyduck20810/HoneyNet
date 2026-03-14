@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thomas Cook — Attack World Map</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0a0c10; --surface:#111318; --border:#1e2229;
+  --text:#c8d0e0; --dim:#4a5568; --orange:#ff6600;
+  --red:#ff3b6e; --green:#00e599; --blue:#2a5cff;
+  --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+}
+body { background:var(--bg); color:var(--text); font-family:var(--sans); height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+/* TOPBAR */
+.topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; z-index:1000; }
+.topbar-left { display:flex; align-items:center; gap:16px; }
+.logo { color:var(--orange); font-weight:700; font-size:16px; }
+.nav-links { display:flex; gap:4px; }
+.nav-links a { padding:6px 14px; border-radius:4px; font-size:12px; text-decoration:none; color:var(--dim); transition:all 0.2s; font-family:var(--mono); }
+.nav-links a:hover { color:var(--orange); background:rgba(255,102,0,0.08); }
+.nav-links a.active { color:var(--orange); background:rgba(255,102,0,0.1); }
+.topbar-right { display:flex; align-items:center; gap:16px; font-family:var(--mono); font-size:11px; color:var(--dim); }
+.live-dot { width:7px; height:7px; background:var(--green); border-radius:50%; box-shadow:0 0 8px var(--green); animation:pulse 1.5s infinite; display:inline-block; margin-right:6px; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* STATS BAR */
+.statsbar { background:rgba(17,19,24,0.95); border-bottom:1px solid var(--border); padding:10px 24px; display:flex; gap:32px; align-items:center; flex-shrink:0; }
+.stat-item { display:flex; flex-direction:column; align-items:center; }
+.stat-val { font-size:20px; font-weight:700; color:var(--text); font-family:var(--mono); line-height:1; }
+.stat-val.red { color:var(--red); }
+.stat-val.orange { color:var(--orange); }
+.stat-val.green { color:var(--green); }
+.stat-lbl { font-size:9px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px; font-family:var(--mono); }
+.stat-div { width:1px; height:32px; background:var(--border); }
+
+/* MAP */
+#map { flex:1; z-index:1; }
+
+/* Override leaflet tiles to dark */
+.leaflet-tile { filter:brightness(0.35) saturate(0.5) hue-rotate(180deg); }
+.leaflet-container { background:#0a0c10 !important; }
+
+/* POPUP */
+.attack-popup { font-family:var(--mono); font-size:11px; min-width:200px; }
+.popup-header { font-size:13px; font-weight:700; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #333; }
+.popup-row { display:flex; justify-content:space-between; gap:12px; margin-bottom:4px; }
+.popup-label { color:#666; }
+.popup-val { color:#e2e8f0; font-weight:600; }
+.popup-val.HIGH { color:#ff3b6e; }
+.popup-val.MEDIUM { color:#ff8c42; }
+.popup-val.LOW { color:#00e599; }
+.leaflet-popup-content-wrapper { background:#111318 !important; border:1px solid #1e2229 !important; border-radius:8px !important; box-shadow:0 8px 32px rgba(0,0,0,0.8) !important; color:#c8d0e0 !important; }
+.leaflet-popup-tip { background:#111318 !important; }
+.leaflet-popup-close-button { color:#4a5568 !important; }
+
+/* LEGEND */
+.legend { position:absolute; bottom:32px; left:16px; z-index:1000; background:rgba(17,19,24,0.95); border:1px solid #1e2229; border-radius:8px; padding:14px 16px; font-family:var(--mono); font-size:11px; }
+.legend-title { color:#4a5568; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
+.legend-item { display:flex; align-items:center; gap:8px; margin-bottom:6px; color:#c8d0e0; }
+.legend-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+
+/* RECENT PANEL */
+.recent-panel { position:absolute; top:16px; right:16px; z-index:1000; background:rgba(17,19,24,0.95); border:1px solid #1e2229; border-radius:8px; width:280px; max-height:400px; overflow:hidden; display:flex; flex-direction:column; }
+.recent-header { padding:12px 16px; border-bottom:1px solid #1e2229; display:flex; justify-content:space-between; align-items:center; }
+.recent-title { font-size:11px; font-weight:700; color:#e2e8f0; font-family:var(--mono); text-transform:uppercase; letter-spacing:0.05em; }
+.recent-list { overflow-y:auto; flex:1; }
+.recent-item { padding:10px 16px; border-bottom:1px solid #0d1017; display:flex; gap:10px; align-items:flex-start; cursor:pointer; transition:background 0.15s; }
+.recent-item:hover { background:rgba(255,102,0,0.05); }
+.risk-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:3px; }
+.risk-dot.HIGH { background:#ff3b6e; box-shadow:0 0 6px #ff3b6e; }
+.risk-dot.MEDIUM { background:#ff8c42; box-shadow:0 0 6px #ff8c42; }
+.risk-dot.LOW { background:#00e599; box-shadow:0 0 6px #00e599; }
+.recent-info { flex:1; }
+.recent-ip { font-family:var(--mono); font-size:11px; color:#2a5cff; font-weight:700; }
+.recent-type { font-size:11px; color:#c8d0e0; margin-top:1px; }
+.recent-loc { font-size:10px; color:#4a5568; margin-top:1px; }
+.recent-time { font-size:9px; color:#2a3a55; font-family:var(--mono); white-space:nowrap; }
+
+/* PULSE animation for new attacks */
+@keyframes ripple {
+  0%   { transform:scale(1);   opacity:1; }
+  100% { transform:scale(3.5); opacity:0; }
+}
+.pulse-ring { animation:ripple 1.5s ease-out infinite; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">✈ Thomas Cook</div>
+    <div class="nav-links">
+      <a href="/dashboard">📊 Dashboard</a>
+      <a href="/map" class="active">🗺️ Attack Map</a>
+      <a href="/" >🎯 Honeypot</a>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span><span class="live-dot"></span>LIVE TRACKING</span>
+    <span id="clock"></span>
+    <span id="last-update" style="color:#2a3a55;">Updating...</span>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="statsbar">
+  <div class="stat-item">
+    <div class="stat-val" id="s-total">—</div>
+    <div class="stat-lbl">Total Attacks</div>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat-item">
+    <div class="stat-val red" id="s-high">—</div>
+    <div class="stat-lbl">High Risk</div>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat-item">
+    <div class="stat-val orange" id="s-countries">—</div>
+    <div class="stat-lbl">Countries</div>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat-item">
+    <div class="stat-val green" id="s-points">—</div>
+    <div class="stat-lbl">Map Points</div>
+  </div>
+  <div class="stat-div"></div>
+  <div class="stat-item">
+    <div class="stat-val" id="s-top-attack" style="font-size:14px;color:#ff6600;">—</div>
+    <div class="stat-lbl">Top Attack</div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-title">Risk Level</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff3b6e;box-shadow:0 0 8px #ff3b6e;"></div> HIGH Risk</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff8c42;box-shadow:0 0 8px #ff8c42;"></div> MEDIUM Risk</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#00e599;box-shadow:0 0 8px #00e599;"></div> LOW Risk</div>
+</div>
+
+<!-- RECENT ATTACKS PANEL -->
+<div class="recent-panel">
+  <div class="recent-header">
+    <span class="recent-title">⚡ Live Attacks</span>
+    <span style="font-size:9px;color:#2a3a55;font-family:var(--mono);">AUTO REFRESH</span>
+  </div>
+  <div class="recent-list" id="recent-list"></div>
+</div>
+
+<script>
+// ── Init map ─────────────────────────────────────────────
+const map = L.map('map', {
+  center: [20, 0],
+  zoom: 2,
+  zoomControl: true,
+  attributionControl: false,
+  minZoom: 2,
+  maxZoom: 10,
+});
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 18,
+}).addTo(map);
+
+// ── State ────────────────────────────────────────────────
+let markers    = {};
+let recentData = [];
+
+// ── Risk config ──────────────────────────────────────────
+const riskConfig = {
+  HIGH:   { color:'#ff3b6e', glow:'#ff3b6e', radius:10, weight:2 },
+  MEDIUM: { color:'#ff8c42', glow:'#ff8c42', radius:8,  weight:1.5 },
+  LOW:    { color:'#00e599', glow:'#00e599', radius:6,  weight:1 },
+};
+
+function getRisk(level) {
+  return riskConfig[level] || riskConfig.LOW;
+}
+
+// ── Create pulsing circle marker ─────────────────────────
+function createMarker(point) {
+  const cfg = getRisk(point.risk_level);
+
+  const marker = L.circleMarker([point.lat, point.lon], {
+    radius:      cfg.radius,
+    fillColor:   cfg.color,
+    color:       cfg.color,
+    weight:      cfg.weight,
+    opacity:     0.9,
+    fillOpacity: 0.7,
+  });
+
+  // Popup content
+  const ts = (point.timestamp || '').substring(0,16).replace('T',' ');
+  marker.bindPopup(`
+    <div class="attack-popup">
+      <div class="popup-header" style="color:${cfg.color}">
+        ${point.risk_level} RISK — ${point.attack_type}
+      </div>
+      <div class="popup-row">
+        <span class="popup-label">IP</span>
+        <span class="popup-val" style="color:#2a5cff">${point.ip}</span>
+      </div>
+      <div class="popup-row">
+        <span class="popup-label">Location</span>
+        <span class="popup-val">${point.city}, ${point.country}</span>
+      </div>
+      <div class="popup-row">
+        <span class="popup-label">Attack</span>
+        <span class="popup-val ${point.risk_level}">${point.attack_type}</span>
+      </div>
+      <div class="popup-row">
+        <span class="popup-label">Risk Score</span>
+        <span class="popup-val ${point.risk_level}">${point.risk_score}/10</span>
+      </div>
+      <div class="popup-row">
+        <span class="popup-label">Time</span>
+        <span class="popup-val" style="color:#4a5568">${ts} UTC</span>
+      </div>
+    </div>
+  `, { maxWidth: 260 });
+
+  return marker;
+}
+
+// ── Fetch and render map points ──────────────────────────
+async function fetchMapData() {
+  try {
+    const res    = await fetch('/api/mapdata');
+    const points = await res.json();
+
+    points.forEach(point => {
+      const key = `${point.lat},${point.lon}`;
+      if (!markers[key]) {
+        const m = createMarker(point);
+        m.addTo(map);
+        markers[key] = m;
+      }
+    });
+
+    document.getElementById('s-points').textContent = Object.keys(markers).length;
+    document.getElementById('last-update').textContent =
+      'Updated ' + new Date().toLocaleTimeString();
+
+  } catch(e) {
+    console.error('Map data error:', e);
+  }
+}
+
+// ── Fetch stats for top bar ──────────────────────────────
+async function fetchStats() {
+  try {
+    const res   = await fetch('/api/stats');
+    const stats = await res.json();
+    document.getElementById('s-total').textContent =
+      stats.total || 0;
+    document.getElementById('s-high').textContent =
+      (stats.risk_levels || {}).HIGH || 0;
+
+    const countries = Object.keys(stats.top_countries || {}).length;
+    document.getElementById('s-countries').textContent = countries;
+
+    const types = stats.attack_types || {};
+    const top   = Object.keys(types).sort((a,b) => types[b]-types[a])[0] || '—';
+    document.getElementById('s-top-attack').textContent = top;
+  } catch(e) {}
+}
+
+// ── Fetch recent attacks for side panel ─────────────────
+async function fetchRecent() {
+  try {
+    const res     = await fetch('/api/recent');
+    const entries = await res.json();
+    const list    = document.getElementById('recent-list');
+
+    list.innerHTML = entries.slice(0,15).map(e => {
+      const ts  = (e.timestamp||'').substring(11,16) + ' UTC';
+      const cfg = getRisk(e.risk_level);
+      return `
+        <div class="recent-item" onclick="flyTo(${e.lat||0},${e.lon||0})">
+          <div class="risk-dot ${e.risk_level}"></div>
+          <div class="recent-info">
+            <div class="recent-ip">${e.ip||'?'}</div>
+            <div class="recent-type">${e.attack_type||'?'}</div>
+            <div class="recent-loc">📍 ${e.city||'?'}, ${e.country||'?'}</div>
+          </div>
+          <div class="recent-time">${ts}</div>
+        </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── Fly to location when clicking recent item ────────────
+function flyTo(lat, lon) {
+  if (lat === 0 && lon === 0) return;
+  map.flyTo([lat, lon], 6, { duration: 1.5 });
+}
+
+// ── Clock ────────────────────────────────────────────────
+function updateClock() {
+  document.getElementById('clock').textContent =
+    new Date().toUTCString().replace('GMT','UTC');
+}
+
+// ── Init & refresh ────────────────────────────────────────
+fetchMapData();
+fetchStats();
+fetchRecent();
+updateClock();
+
+setInterval(fetchMapData,  15000);
+setInterval(fetchStats,    15000);
+setInterval(fetchRecent,   10000);
+setInterval(updateClock,   1000);
+</script>
+
+</body>
+</html>

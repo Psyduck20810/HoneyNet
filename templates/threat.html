@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Thomas Cook — Threat Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0a0c10; --surface:#111318; --border:#1e2229;
+  --text:#c8d0e0; --dim:#4a5568; --orange:#ff6600;
+  --red:#ff3b6e; --green:#00e599; --blue:#2a5cff;
+  --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+}
+body { background:var(--bg); color:var(--text); font-family:var(--sans); min-height:100vh; }
+.topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+.logo { color:var(--orange); font-weight:700; font-size:16px; }
+.nav { display:flex; gap:4px; }
+.nav a { padding:6px 14px; border-radius:4px; font-size:12px; text-decoration:none; color:var(--dim); font-family:var(--mono); transition:all 0.2s; }
+.nav a:hover,.nav a.active { color:var(--orange); background:rgba(255,102,0,0.08); }
+.main { max-width:1100px; margin:0 auto; padding:28px 24px; }
+.page-title { font-size:22px; font-weight:700; color:#e2e8f0; margin-bottom:6px; }
+.page-sub { font-size:13px; color:var(--dim); margin-bottom:28px; }
+
+/* SEARCH BOX */
+.search-box { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:24px; }
+.search-title { font-size:12px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); margin-bottom:12px; }
+.search-row { display:flex; gap:12px; }
+.ip-input { flex:1; background:#0d1017; border:1px solid var(--border); border-radius:6px; padding:11px 16px; font-family:var(--mono); font-size:14px; color:var(--text); outline:none; transition:all 0.2s; }
+.ip-input:focus { border-color:var(--orange); box-shadow:0 0 0 3px rgba(255,102,0,0.1); }
+.check-btn { background:var(--orange); color:white; border:none; padding:11px 24px; border-radius:6px; font-size:13px; font-weight:700; cursor:pointer; font-family:var(--mono); transition:all 0.2s; }
+.check-btn:hover { background:#e55a00; }
+.check-btn:disabled { opacity:0.5; cursor:not-allowed; }
+.batch-btn { background:transparent; color:var(--blue); border:1px solid var(--blue); padding:11px 20px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; font-family:var(--mono); transition:all 0.2s; }
+.batch-btn:hover { background:rgba(42,92,255,0.1); }
+
+/* RESULT CARD */
+.result-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:16px; animation:fadeIn 0.3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.result-header { padding:16px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
+.result-ip { font-family:var(--mono); font-size:18px; font-weight:700; color:var(--blue); }
+.threat-badge { padding:5px 14px; border-radius:4px; font-size:11px; font-weight:700; font-family:var(--mono); }
+.threat-badge.CRITICAL { background:rgba(255,59,110,0.2); color:var(--red);   border:1px solid rgba(255,59,110,0.4); }
+.threat-badge.HIGH     { background:rgba(255,59,110,0.15);color:var(--red);   border:1px solid rgba(255,59,110,0.3); }
+.threat-badge.MEDIUM   { background:rgba(255,140,66,0.15); color:#ff8c42;     border:1px solid rgba(255,140,66,0.3); }
+.threat-badge.LOW      { background:rgba(255,102,0,0.1);   color:var(--orange);border:1px solid rgba(255,102,0,0.2); }
+.threat-badge.CLEAN    { background:rgba(0,229,153,0.1);   color:var(--green);border:1px solid rgba(0,229,153,0.2); }
+
+.result-body { padding:20px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+.score-section { display:flex; align-items:center; gap:16px; }
+.score-circle { width:70px; height:70px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; border:3px solid; flex-shrink:0; }
+.score-num { font-size:22px; font-weight:700; font-family:var(--mono); line-height:1; }
+.score-lbl { font-size:9px; color:var(--dim); text-transform:uppercase; margin-top:2px; }
+.score-info { flex:1; }
+.score-info-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border); font-size:12px; }
+.score-info-label { color:var(--dim); }
+.score-info-val { color:#e2e8f0; font-family:var(--mono); }
+
+.flags-section { }
+.flags-title { font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); margin-bottom:10px; }
+.flag-item { padding:8px 12px; border-radius:5px; font-size:12px; margin-bottom:6px; border:1px solid; }
+.flag-item.danger  { background:rgba(255,59,110,0.06); border-color:rgba(255,59,110,0.2); color:#ff8080; }
+.flag-item.warning { background:rgba(255,140,66,0.06); border-color:rgba(255,140,66,0.2); color:#ffaa60; }
+.flag-item.clean   { background:rgba(0,229,153,0.06);  border-color:rgba(0,229,153,0.2);  color:#00c880; }
+.flag-item.info    { background:rgba(42,92,255,0.06);  border-color:rgba(42,92,255,0.2);  color:#6090ff; }
+
+/* SOURCES */
+.sources-row { padding:12px 20px; background:#0d1017; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.source-tag { padding:3px 10px; border-radius:12px; font-size:10px; font-family:var(--mono); background:var(--border); color:var(--dim); }
+.source-tag.checked { background:rgba(0,229,153,0.1); color:var(--green); border:1px solid rgba(0,229,153,0.2); }
+
+/* LOADING */
+.loading-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:32px; text-align:center; }
+.spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--orange); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* IP TABLE */
+.ip-table { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:24px; }
+.ip-table-header { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.ip-table-title { font-size:12px; font-weight:700; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); }
+table { width:100%; border-collapse:collapse; }
+th { padding:10px 16px; text-align:left; font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); background:#0d1017; }
+td { padding:10px 16px; border-bottom:1px solid var(--border); font-size:12px; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:rgba(255,255,255,0.01); }
+.clickable-ip { color:var(--blue); cursor:pointer; font-family:var(--mono); font-weight:700; text-decoration:underline; }
+.clickable-ip:hover { color:#4a7aff; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">✈ Thomas Cook — Threat Intelligence</div>
+  <div class="nav">
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/sessions">🎬 Sessions</a>
+    <a href="/threat" class="active">🔍 Threat Intel</a>
+    <a href="/map">🗺️ Map</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">🔍 Threat Intelligence Feed</div>
+  <div class="page-sub">Check attacker IPs against multiple threat databases in real time</div>
+
+  <!-- SEARCH -->
+  <div class="search-box">
+    <div class="search-title">Check IP Address</div>
+    <div class="search-row">
+      <input type="text" class="ip-input" id="ip-input"
+             placeholder="Enter IP address e.g. 185.220.101.5"
+             onkeydown="if(event.key==='Enter') checkSingleIP()">
+      <button class="check-btn" onclick="checkSingleIP()" id="check-btn">
+        🔍 Check IP
+      </button>
+      <button class="batch-btn" onclick="checkTopAttackers()">
+        ⚡ Check Top Attackers
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results"></div>
+
+  <!-- TOP ATTACKER IPS TABLE -->
+  <div class="ip-table">
+    <div class="ip-table-header">
+      <span class="ip-table-title">🎯 Top Attacker IPs — Click to Check</span>
+      <span style="font-size:11px;color:var(--dim);font-family:var(--mono);" id="ip-table-count">Loading...</span>
+    </div>
+    <table>
+      <tr>
+        <th>IP Address</th>
+        <th>Attack Count</th>
+        <th>Country</th>
+        <th>Top Attack</th>
+        <th>Risk Level</th>
+        <th>Action</th>
+      </tr>
+      <tbody id="ip-table-body">
+        <tr><td colspan="6" style="text-align:center;color:var(--dim);padding:20px;">Loading attackers...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ── Load top attacker IPs from sessions ──────────────────
+async function loadTopIPs() {
+  try {
+    const res      = await fetch('/api/sessions');
+    const sessions = await res.json();
+
+    document.getElementById('ip-table-count').textContent =
+      sessions.length + ' attackers';
+
+    const tbody = document.getElementById('ip-table-body');
+    if (sessions.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--dim);padding:20px;">No attackers yet — run a simulation!</td></tr>';
+      return;
+    }
+
+    const riskColors = { HIGH:'#ff3b6e', MEDIUM:'#ff8c42', LOW:'#00e599' };
+
+    tbody.innerHTML = sessions.slice(0,10).map(s => `
+      <tr>
+        <td>
+          <span class="clickable-ip" onclick="checkIP('${s.ip}')">${s.ip}</span>
+        </td>
+        <td style="font-family:var(--mono);color:#e2e8f0;">${s.total_events}</td>
+        <td style="color:var(--dim);">📍 ${s.city}, ${s.country}</td>
+        <td style="color:var(--orange);">${s.top_attack}</td>
+        <td style="color:${riskColors[s.overall_risk]||'#c8d0e0'};font-family:var(--mono);font-weight:700;">${s.overall_risk}</td>
+        <td>
+          <button onclick="checkIP('${s.ip}')" style="background:transparent;border:1px solid var(--orange);color:var(--orange);padding:4px 12px;border-radius:4px;font-size:11px;cursor:pointer;font-family:var(--mono);">
+            Check
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    console.error('Load IPs error:', e);
+  }
+}
+
+// ── Check single IP ───────────────────────────────────────
+async function checkSingleIP() {
+  const ip = document.getElementById('ip-input').value.trim();
+  if (!ip) return;
+  checkIP(ip);
+}
+
+async function checkIP(ip) {
+  document.getElementById('ip-input').value = ip;
+
+  const results = document.getElementById('results');
+  results.innerHTML = `
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div style="color:var(--dim);font-family:var(--mono);font-size:12px;">
+        Checking ${ip} against threat databases...
+      </div>
+    </div>`;
+
+  const btn = document.getElementById('check-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Checking...';
+
+  try {
+    const res    = await fetch('/api/threat/' + ip);
+    const data   = await res.json();
+    renderResult(data);
+  } catch(e) {
+    results.innerHTML = `<div class="loading-card" style="color:var(--red);">❌ Error checking IP: ${e.message}</div>`;
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = '🔍 Check IP';
+  }
+}
+
+// ── Check top attackers in batch ─────────────────────────
+async function checkTopAttackers() {
+  const res      = await fetch('/api/sessions');
+  const sessions = await res.json();
+  const ips      = sessions.slice(0,5).map(s => s.ip);
+
+  if (ips.length === 0) {
+    alert('No attackers found! Run a simulation first.');
+    return;
+  }
+
+  const results = document.getElementById('results');
+  results.innerHTML = `
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <div style="color:var(--dim);font-family:var(--mono);font-size:12px;">
+        Checking ${ips.length} IPs against threat databases...<br>
+        <span style="color:#2a3a55;">This may take 10-15 seconds</span>
+      </div>
+    </div>`;
+
+  try {
+    const res2   = await fetch('/api/threat/batch', {
+      method:  'POST',
+      headers: {'Content-Type':'application/json'},
+      body:    JSON.stringify({ ips })
+    });
+    const data = await res2.json();
+    results.innerHTML = '';
+    Object.values(data).forEach(d => {
+      results.innerHTML += renderResultHTML(d);
+    });
+  } catch(e) {
+    results.innerHTML = `<div class="loading-card" style="color:var(--red);">❌ Batch check failed: ${e.message}</div>`;
+  }
+}
+
+// ── Render single result ──────────────────────────────────
+function renderResult(data) {
+  document.getElementById('results').innerHTML = renderResultHTML(data);
+}
+
+function renderResultHTML(data) {
+  const score      = data.threat_score || 0;
+  const level      = data.threat_level || 'CLEAN';
+  const scoreColors = {
+    CRITICAL:'#ff3b6e', HIGH:'#ff3b6e',
+    MEDIUM:'#ff8c42',   LOW:'#ff6600', CLEAN:'#00e599'
+  };
+  const color = scoreColors[level] || '#00e599';
+
+  const flagHTML = (data.flags || []).map(f => {
+    let cls = 'info';
+    if (f.includes('🔴') || f.includes('🚨') || f.includes('🧅')) cls = 'danger';
+    else if (f.includes('⚠️') || f.includes('🖥️'))               cls = 'warning';
+    else if (f.includes('✅'))                                      cls = 'clean';
+    return `<div class="flag-item ${cls}">${f}</div>`;
+  }).join('');
+
+  return `
+    <div class="result-card">
+      <div class="result-header">
+        <div>
+          <div class="result-ip">${data.ip}</div>
+          <div style="font-size:11px;color:var(--dim);margin-top:3px;font-family:var(--mono);">
+            ${data.org || data.isp || 'Unknown ISP'}
+          </div>
+        </div>
+        <span class="threat-badge ${level}">${level} THREAT</span>
+      </div>
+
+      <div class="result-body">
+        <div class="score-section">
+          <div class="score-circle" style="border-color:${color};">
+            <span class="score-num" style="color:${color};">${score}</span>
+            <span class="score-lbl">SCORE</span>
+          </div>
+          <div class="score-info">
+            <div class="score-info-row">
+              <span class="score-info-label">Tor Exit Node</span>
+              <span class="score-info-val" style="color:${data.is_tor ? '#ff3b6e':'#00e599'}">
+                ${data.is_tor ? '⚠️ YES' : '✅ NO'}
+              </span>
+            </div>
+            <div class="score-info-row">
+              <span class="score-info-label">Proxy / VPN</span>
+              <span class="score-info-val" style="color:${data.is_proxy ? '#ff8c42':'#00e599'}">
+                ${data.is_proxy ? '⚠️ YES' : '✅ NO'}
+              </span>
+            </div>
+            <div class="score-info-row">
+              <span class="score-info-label">Abuse Reports</span>
+              <span class="score-info-val" style="color:${data.abuse_reports > 0 ? '#ff3b6e':'#00e599'}">
+                ${data.abuse_reports || 0}
+              </span>
+            </div>
+            <div class="score-info-row">
+              <span class="score-info-label">Databases Hit</span>
+              <span class="score-info-val" style="color:${data.databases_found > 0 ? '#ff8c42':'#00e599'}">
+                ${data.databases_found || 0}
+              </span>
+            </div>
+            <div class="score-info-row">
+              <span class="score-info-label">ISP</span>
+              <span class="score-info-val">${(data.isp||'Unknown').substring(0,20)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flags-section">
+          <div class="flags-title">🚩 Threat Indicators</div>
+          ${flagHTML || '<div class="flag-item clean">✅ No threats detected</div>'}
+        </div>
+      </div>
+
+      <div class="sources-row">
+        <span style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-right:6px;">SOURCES:</span>
+        <span class="source-tag checked">ip-api.com</span>
+        <span class="source-tag ${data.abuse_reports !== undefined ? 'checked':''}">AbuseIPDB</span>
+        <span class="source-tag checked">IP Range DB</span>
+        <span class="source-tag">GreyNoise</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--dim);font-family:var(--mono);">
+          ${data.sources_checked || 0} sources checked
+        </span>
+      </div>
+    </div>`;
+}
+
+// ── Init ──────────────────────────────────────────────────
+loadTopIPs();
+</script>
+
+</body>
+</html>

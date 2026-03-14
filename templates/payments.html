@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head><title>Thomas Cook — Payments</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0c10; color:#c8d0e0; font-family:'IBM Plex Sans',sans-serif; }
+.topbar { background:#111318; border-bottom:1px solid #1e2229; padding:14px 24px; display:flex; justify-content:space-between; }
+.logo { color:#ff6600; font-weight:700; font-size:18px; }
+.user-info { font-size:12px; color:#4a5568; }
+.sidebar { position:fixed; left:0; top:53px; bottom:0; width:200px; background:#111318; border-right:1px solid #1e2229; padding:20px 0; }
+.sidebar a { display:block; padding:10px 20px; color:#4a5568; text-decoration:none; font-size:13px; }
+.sidebar a:hover { color:#ff6600; }
+.sidebar a.active { color:#ff6600; border-left:2px solid #ff6600; }
+.main { margin-left:200px; padding:24px; }
+.page-title { font-size:20px; font-weight:600; margin-bottom:6px; color:#e2e8f0; }
+.warning { background:rgba(255,59,110,0.08); border:1px solid rgba(255,59,110,0.2); border-radius:6px; padding:12px 16px; margin-bottom:20px; font-size:12px; color:#ff3b6e; font-family:'IBM Plex Mono',monospace; }
+table { width:100%; border-collapse:collapse; background:#111318; border:1px solid #1e2229; border-radius:8px; overflow:hidden; }
+th { background:#1a2035; padding:12px 16px; text-align:left; font-size:11px; color:#4a5568; text-transform:uppercase; }
+td { padding:12px 16px; border-bottom:1px solid #1e2229; font-size:13px; font-family:'IBM Plex Mono',monospace; }
+.badge { padding:3px 8px; border-radius:3px; font-size:10px; font-weight:600; }
+.success { background:rgba(0,229,153,0.1); color:#00e599; }
+.failed { background:rgba(255,59,110,0.1); color:#ff3b6e; }
+.pending { background:rgba(255,140,66,0.1); color:#ff8c42; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">✈ Thomas Cook Admin</div>
+  <div class="user-info">Logged in as: admin@thomascook.com</div>
+</div>
+<div class="sidebar">
+  <a href="/admin/dashboard">📊 Dashboard</a>
+  <a href="/api/users">👥 Users</a>
+  <a href="/bookings">📦 Bookings</a>
+  <a href="/flights">✈ Flights</a>
+  <a href="/hotels">🏨 Hotels</a>
+  <a href="/payments" class="active">💳 Payments</a>
+  <a href="/config.php">⚙ Config</a>
+  <a href="/backup.zip">💾 Backup</a>
+  <a href="/server-status">🖥 Server</a>
+</div>
+<div class="main">
+  <div class="page-title">💳 Payment Records</div>
+  <div class="warning">⚠ CONFIDENTIAL — Payment Gateway Data — Authorized Access Only</div>
+  <table>
+    <tr><th>Transaction ID</th><th>Customer</th><th>Card</th><th>Amount</th><th>Date</th><th>Gateway</th><th>Status</th></tr>
+    <tr><td>TXN-20260310-001</td><td>Rahul Sharma</td><td>**** **** **** 4521</td><td>₹85,000</td><td>10 Mar 2026</td><td>Razorpay</td><td><span class="badge success">Success</span></td></tr>
+    <tr><td>TXN-20260310-002</td><td>Priya Patel</td><td>**** **** **** 7832</td><td>₹72,500</td><td>10 Mar 2026</td><td>PayU</td><td><span class="badge success">Success</span></td></tr>
+    <tr><td>TXN-20260309-001</td><td>Amit Kumar</td><td>**** **** **** 2341</td><td>₹45,000</td><td>09 Mar 2026</td><td>Razorpay</td><td><span class="badge pending">Pending</span></td></tr>
+    <tr><td>TXN-20260309-002</td><td>Sneha Reddy</td><td>**** **** **** 9876</td><td>₹1,20,000</td><td>09 Mar 2026</td><td>Stripe</td><td><span class="badge success">Success</span></td></tr>
+    <tr><td>TXN-20260308-001</td><td>Neha Gupta</td><td>**** **** **** 5543</td><td>₹2,10,000</td><td>08 Mar 2026</td><td>PayU</td><td><span class="badge failed">Failed</span></td></tr>
+    <tr><td>TXN-20260308-002</td><td>Rohit Verma</td><td>**** **** **** 1122</td><td>₹1,65,000</td><td>08 Mar 2026</td><td>Razorpay</td><td><span class="badge success">Success</span></td></tr>
+  </table>
+</div>
+</body>
+</html>

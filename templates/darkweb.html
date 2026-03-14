@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Thomas Cook — Dark Web Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0a0c10; --surface:#111318; --border:#1e2229;
+  --text:#c8d0e0; --dim:#4a5568; --orange:#ff6600;
+  --red:#ff3b6e; --green:#00e599; --blue:#2a5cff;
+  --purple:#a78bfa;
+  --mono:"IBM Plex Mono",monospace; --sans:"IBM Plex Sans",sans-serif;
+}
+body { background:var(--bg); color:var(--text); font-family:var(--sans); min-height:100vh; }
+.topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+.logo { color:var(--purple); font-weight:700; font-size:16px; }
+.nav { display:flex; gap:4px; }
+.nav a { padding:6px 14px; border-radius:4px; font-size:12px; text-decoration:none; color:var(--dim); font-family:var(--mono); transition:all 0.2s; }
+.nav a:hover, .nav a.active { color:var(--purple); background:rgba(167,139,250,0.08); }
+.main { max-width:1100px; margin:0 auto; padding:28px 24px; }
+.pulse { display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--red); box-shadow:0 0 0 0 rgba(255,59,110,0.4); animation:pulse 2s infinite; margin-right:8px; }
+@keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(255,59,110,0.4)} 70%{box-shadow:0 0 0 10px rgba(255,59,110,0)} 100%{box-shadow:0 0 0 0 rgba(255,59,110,0)} }
+.hero-alert { background:linear-gradient(135deg,rgba(139,0,0,0.3),rgba(167,139,250,0.1)); border:1px solid rgba(255,59,110,0.4); border-radius:12px; padding:24px 28px; margin-bottom:24px; position:relative; overflow:hidden; }
+.hero-alert::before { content:""; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--red),var(--purple)); }
+.alert-title { font-size:22px; font-weight:700; color:var(--red); margin-bottom:4px; }
+.alert-sub { font-size:13px; color:var(--dim); margin-bottom:20px; }
+.alert-stats { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+.alert-stat { text-align:center; background:rgba(0,0,0,0.3); border-radius:8px; padding:12px; border:1px solid rgba(255,255,255,0.05); }
+.alert-stat-val { font-size:28px; font-weight:700; font-family:var(--mono); }
+.alert-stat-lbl { font-size:9px; color:var(--dim); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; font-family:var(--mono); }
+.disclaimer { background:rgba(167,139,250,0.06); border:1px solid rgba(167,139,250,0.2); border-radius:8px; padding:12px 16px; margin-bottom:24px; font-size:11px; color:var(--purple); font-family:var(--mono); }
+.summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
+.panel { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.panel-header { padding:14px 20px; border-bottom:1px solid var(--border); }
+.panel-title { font-size:11px; font-weight:700; color:#e2e8f0; text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); }
+.panel-body { padding:16px 20px; }
+.forum-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+.forum-item:last-child { border-bottom:none; }
+.forum-name { font-size:12px; color:var(--text); font-family:var(--mono); }
+.forum-dot { width:6px; height:6px; border-radius:50%; background:var(--red); box-shadow:0 0 6px var(--red); }
+.filter-tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.filter-tab { padding:6px 16px; border-radius:4px; font-size:11px; font-weight:700; cursor:pointer; font-family:var(--mono); border:1px solid var(--border); background:transparent; color:var(--dim); transition:all 0.2s; }
+.filter-tab.active { background:rgba(167,139,250,0.1); border-color:var(--purple); color:var(--purple); }
+.mention-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:16px; overflow:hidden; animation:fadeIn 0.3s ease; }
+.mention-card.CRITICAL { border-left:3px solid var(--red); }
+.mention-card.HIGH     { border-left:3px solid var(--orange); }
+.mention-card.MEDIUM   { border-left:3px solid var(--purple); }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.mention-header { padding:14px 20px; display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--border); }
+.mention-forum { font-size:11px; color:var(--dim); font-family:var(--mono); margin-bottom:6px; }
+.mention-forum span { color:var(--purple); }
+.mention-title { font-size:15px; font-weight:700; color:#e2e8f0; }
+.mention-meta { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; margin-left:16px; }
+.threat-badge { padding:4px 12px; border-radius:3px; font-size:10px; font-weight:700; font-family:var(--mono); }
+.threat-badge.CRITICAL { background:rgba(255,59,110,0.2); color:var(--red);    border:1px solid rgba(255,59,110,0.4); }
+.threat-badge.HIGH     { background:rgba(255,102,0,0.15); color:var(--orange); border:1px solid rgba(255,102,0,0.3); }
+.threat-badge.MEDIUM   { background:rgba(167,139,250,0.15);color:var(--purple);border:1px solid rgba(167,139,250,0.3); }
+.verified-yes { font-size:9px; font-family:var(--mono); padding:2px 8px; border-radius:3px; background:rgba(255,59,110,0.1); color:var(--red); border:1px solid rgba(255,59,110,0.2); }
+.verified-no  { font-size:9px; font-family:var(--mono); padding:2px 8px; border-radius:3px; background:rgba(74,85,104,0.2); color:var(--dim); border:1px solid var(--border); }
+.mention-body { padding:16px 20px; }
+.mention-preview { font-size:13px; color:var(--text); line-height:1.6; margin-bottom:14px; font-style:italic; border-left:2px solid var(--border); padding-left:12px; }
+.mention-details { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:14px; }
+.detail-item { background:#0d1017; border-radius:6px; padding:10px 12px; }
+.detail-label { font-size:9px; color:var(--dim); text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); margin-bottom:4px; }
+.detail-val { font-size:12px; font-family:var(--mono); font-weight:700; }
+.contains-label { font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); margin-bottom:8px; }
+.contains-list { display:flex; gap:6px; flex-wrap:wrap; }
+.contains-tag { background:rgba(255,59,110,0.06); border:1px solid rgba(255,59,110,0.15); border-radius:3px; padding:3px 10px; font-size:10px; color:#ff8080; font-family:var(--mono); }
+.mention-footer { padding:10px 20px; background:#0d1017; border-top:1px solid var(--border); display:flex; justify-content:space-between; }
+.onion-link { font-size:10px; color:var(--dim); font-family:var(--mono); }
+.onion-link span { color:var(--purple); }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:#1e2229; border-radius:2px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">🕵️ Thomas Cook — Dark Web Monitor</div>
+  <div class="nav">
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/sessions">🎬 Sessions</a>
+    <a href="/threat">🔍 Threat Intel</a>
+    <a href="/darkweb" class="active">🕸️ Dark Web</a>
+    <a href="/map">🗺️ Map</a>
+  </div>
+</div>
+<div class="main">
+  <div class="hero-alert">
+    <div class="alert-title"><span class="pulse"></span>⚠️ DARK WEB THREAT DETECTED</div>
+    <div class="alert-sub">thomascook.com is actively discussed on dark web forums — immediate action required</div>
+    <div class="alert-stats">
+      <div class="alert-stat"><div class="alert-stat-val" style="color:#e2e8f0" id="stat-total">—</div><div class="alert-stat-lbl">Total Mentions</div></div>
+      <div class="alert-stat"><div class="alert-stat-val" style="color:var(--red)"    id="stat-critical">—</div><div class="alert-stat-lbl">Critical</div></div>
+      <div class="alert-stat"><div class="alert-stat-val" style="color:var(--orange)" id="stat-high">—</div><div class="alert-stat-lbl">High Risk</div></div>
+      <div class="alert-stat"><div class="alert-stat-val" style="color:var(--purple)" id="stat-medium">—</div><div class="alert-stat-lbl">Medium Risk</div></div>
+      <div class="alert-stat"><div class="alert-stat-val" style="color:var(--red)"    id="stat-verified">—</div><div class="alert-stat-lbl">Verified Leaks</div></div>
+    </div>
+  </div>
+  <div class="disclaimer">⚠️ SIMULATION NOTICE: This dark web monitoring module uses simulated threat intelligence data for demonstration purposes. In production, this integrates with services like Recorded Future, Digital Shadows, or Intel 471.</div>
+  <div class="summary-grid">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">🕸️ Forums Detected On</span></div>
+      <div class="panel-body" id="forums-list">Loading...</div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">📂 Threat Categories Found</span></div>
+      <div class="panel-body" id="categories-list">Loading...</div>
+    </div>
+  </div>
+  <div class="filter-tabs">
+    <button class="filter-tab active" onclick="filterMentions('ALL',this)">🔴 All Mentions</button>
+    <button class="filter-tab" onclick="filterMentions('CRITICAL',this)">🚨 Critical</button>
+    <button class="filter-tab" onclick="filterMentions('HIGH',this)">⚠️ High</button>
+    <button class="filter-tab" onclick="filterMentions('MEDIUM',this)">🟡 Medium</button>
+    <button class="filter-tab" onclick="filterMentions('VERIFIED',this)">✅ Verified Only</button>
+  </div>
+  <div id="mentions-container">
+    <div style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);">Loading intelligence...</div>
+  </div>
+</div>
+<script>
+let allMentions = [];
+async function loadDarkWeb() {
+  try {
+    const res  = await fetch("/api/darkweb");
+    const data = await res.json();
+    document.getElementById("stat-total").textContent    = data.total;
+    document.getElementById("stat-critical").textContent = data.critical;
+    document.getElementById("stat-high").textContent     = data.high;
+    document.getElementById("stat-medium").textContent   = data.medium;
+    document.getElementById("stat-verified").textContent = data.verified;
+    document.getElementById("forums-list").innerHTML = data.forums_found.map(f =>
+      `<div class="forum-item"><span class="forum-name">${f}</span><span class="forum-dot"></span></div>`
+    ).join("");
+    const catColors = {"Database Leak":"var(--red)","Credentials":"var(--orange)","Vulnerability":"var(--red)","Data Leak":"var(--orange)","Source Code":"var(--purple)","Brand Mention":"var(--dim)","Phishing Kit":"var(--purple)","API Keys":"var(--red)"};
+    document.getElementById("categories-list").innerHTML = data.categories.map(c =>
+      `<div class="forum-item"><span class="forum-name" style="color:${catColors[c]||"var(--text)"}">${c}</span><span style="font-size:10px;color:var(--dim);font-family:var(--mono)">DETECTED</span></div>`
+    ).join("");
+    allMentions = data.mentions;
+    renderMentions(allMentions);
+  } catch(e) { console.error(e); }
+}
+function filterMentions(type, btn) {
+  document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  let filtered = allMentions;
+  if (type === "VERIFIED") filtered = allMentions.filter(m => m.verified);
+  else if (type !== "ALL") filtered = allMentions.filter(m => m.threat_level === type);
+  renderMentions(filtered);
+}
+function renderMentions(mentions) {
+  const c = document.getElementById("mentions-container");
+  if (!mentions.length) { c.innerHTML = `<div style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono)">No mentions for this filter</div>`; return; }
+  const pc = p => p==="FREE"?"var(--green)":p==="N/A"?"var(--dim)":"var(--red)";
+  c.innerHTML = mentions.map((m,i) => `
+    <div class="mention-card ${m.threat_level}" style="animation-delay:${i*0.05}s">
+      <div class="mention-header">
+        <div>
+          <div class="mention-forum">🕸️ Forum: <span>${m.forum}</span> &nbsp;·&nbsp; Category: <span>${m.category}</span></div>
+          <div class="mention-title">${m.title}</div>
+        </div>
+        <div class="mention-meta">
+          <span class="threat-badge ${m.threat_level}">${m.threat_level}</span>
+          <span class="${m.verified?"verified-yes":"verified-no"}">${m.verified?"⚠️ VERIFIED":"❓ UNVERIFIED"}</span>
+        </div>
+      </div>
+      <div class="mention-body">
+        <div class="mention-preview">"${m.preview}"</div>
+        <div class="mention-details">
+          <div class="detail-item"><div class="detail-label">💰 Price</div><div class="detail-val" style="color:${pc(m.price)}">${m.price}</div></div>
+          <div class="detail-item"><div class="detail-label">👤 Seller</div><div class="detail-val" style="color:var(--purple)">${m.seller}</div></div>
+          <div class="detail-item"><div class="detail-label">📊 Records</div><div class="detail-val" style="color:var(--orange)">${m.records}</div></div>
+          <div class="detail-item"><div class="detail-label">📅 Posted</div><div class="detail-val" style="color:var(--dim)">${m.date}</div></div>
+        </div>
+        <div class="contains-label">Contains:</div>
+        <div class="contains-list">${m.contains.map(x=>`<span class="contains-tag">⚠️ ${x}</span>`).join("")}</div>
+      </div>
+      <div class="mention-footer">
+        <div class="onion-link">🧅 <span>${m.onion}</span></div>
+        <div style="font-size:10px;color:var(--dim);font-family:var(--mono)">Detected: ${m.date}</div>
+      </div>
+    </div>`).join("");
+}
+loadDarkWeb();
+</script>
+</body>
+</html>
