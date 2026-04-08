@@ -172,6 +172,14 @@ Submit login 5+ times in under 1 minute.
 
 ---
 
+## 🔄 Workflow
+
+![IHaaS Workflow Diagram](IHaaS%20Workflow%20Diagram.jpg)
+
+> *Fig. 2. IHaaS Workflow Diagram*
+
+---
+
 ## 🏗️ System Architecture
 
 ![IHaaS System Architecture](IHaaS%20System%20Architecture%20Diagram.jpg)
