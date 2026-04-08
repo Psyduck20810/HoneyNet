@@ -183,11 +183,4 @@ Submit login 5+ times in under 1 minute.
 
 ---
 
-## 👥 Team Contributions
 
-| Member | Module |
-|---|---|
-| Anish Kharat | app.py, login.html |
-| Anannya Manwar | intelligence.py, geoip.py |
-| Aditya Chaskar | Dockerfile, AWS setup |
-| Vedant Patil | dashboard.html, alerts.py |
