@@ -189,3 +189,13 @@ Submit login 5+ times in under 1 minute.
 
 > *Fig. 1. IHaaS System Architecture Diagram*
 
+---
+
+## 👥 Team Members
+
+| Name | Role |
+|---|---|
+| Anannya Manwar | ML Anomaly Detection, Threat Intelligence |
+| Aditya Chaskar | SSH / DB / Email Honeypot, Blockchain Logging |
+| Anish Kharat | Flask Web App, Dashboard, Attack Detection Engine |
+| Vedant Patil | Geolocation, Alerts (Telegram & Email), Docker & AWS Deployment |
