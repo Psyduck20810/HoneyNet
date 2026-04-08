@@ -187,7 +187,7 @@ Submit login 5+ times in under 1 minute.
 
 | Member | Module |
 |---|---|
-| Member 1 | app.py, login.html |
-| Member 2 | intelligence.py, geoip.py |
-| Member 3 | Dockerfile, AWS setup |
-| Member 4 | dashboard.html, alerts.py |
+| Anish Kharat | app.py, login.html |
+| Anannya Manwar | intelligence.py, geoip.py |
+| Aditya Chaskar | Dockerfile, AWS setup |
+| Vedant Patil | dashboard.html, alerts.py |
