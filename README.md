@@ -185,7 +185,7 @@ Submit login 5+ times in under 1 minute.
 
 ## 🏗️ System Architecture
 
-![IHaaS System Architecture](IHaaS_System_Architecture_Diagram.jpg)
+![IHaaS System Architecture](IHaaS%20System%20Architecture%20Diagram.jpg)
 
 > *Fig. 1. IHaaS System Architecture Diagram*
 
