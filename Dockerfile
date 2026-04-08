@@ -12,8 +12,9 @@ COPY . .
 # Create logs directory
 RUN mkdir -p logs
 
-# Expose port
-EXPOSE 5000
+# Expose all honeypot ports
+# 5000 = Web (Flask), 2222 = SSH honeypot, 27017 = MongoDB honeypot, 2525 = SMTP honeypot
+EXPOSE 5000 2222 27017 2525
 
 # Run app
 CMD ["python", "app/app.py"]

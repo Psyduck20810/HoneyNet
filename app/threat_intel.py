@@ -5,7 +5,8 @@ from collections import defaultdict
 
 # Simple in-memory cache so we don't re-check same IP
 _cache = {}
-_cache_ttl = 3600  # 1 hour
+_cache_ttl = 3600   # 1 hour
+_cache_max = 1000   # evict oldest 20% when full
 
 def check_ip(ip: str) -> dict:
     """Check an IP against multiple threat intelligence sources."""
@@ -185,7 +186,12 @@ def check_ip(ip: str) -> dict:
     if not result["flags"]:
         result["flags"].append("✅ No threat indicators found")
 
-    # Cache the result
+    # Evict oldest entries if cache is full
+    if len(_cache) >= _cache_max:
+        evict_count = _cache_max // 5
+        oldest = sorted(_cache, key=lambda k: _cache[k].get("_cached_at", 0))
+        for k in oldest[:evict_count]:
+            del _cache[k]
     result["_cached_at"] = time.time()
     _cache[ip] = result
     return result

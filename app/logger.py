@@ -2,6 +2,18 @@
 import json
 import os
 import datetime
+try:
+    from anomaly_detector import detect_anomaly
+    ANOMALY_ENABLED = True
+except Exception as e:
+    print(f'[ML] Anomaly detector not loaded: {e}')
+    ANOMALY_ENABLED = False
+
+try:
+    from blockchain import log_to_blockchain
+    BLOCKCHAIN_ENABLED = True
+except:
+    BLOCKCHAIN_ENABLED = False
 from collections import defaultdict, Counter
 
 LOG_FILE = os.path.join(os.path.dirname(__file__), "../logs/attack.log")
@@ -34,15 +46,40 @@ except Exception:
 class AttackLogger:
 
     def log(self, entry: dict):
-        entry["timestamp"] = datetime.datetime.utcnow().isoformat()
+        entry["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+
+        # ── ML Anomaly Detection (run BEFORE writing so it's persisted) ──
+        if ANOMALY_ENABLED:
+            try:
+                anomaly = detect_anomaly(entry)
+                # Convert numpy types → native Python so json.dumps works
+                entry["anomaly"]         = bool(anomaly["is_anomaly"])
+                entry["anomaly_score"]   = float(anomaly["anomaly_score"])
+                entry["anomaly_label"]   = str(anomaly["label"])
+                entry["anomaly_reasons"] = [str(r) for r in anomaly["reasons"]]
+                if anomaly["is_anomaly"]:
+                    print(f"[ML] 🚨 ANOMALY DETECTED — {entry['ip']} | Score: {anomaly['anomaly_score']}% | {', '.join(anomaly['reasons'])}")
+            except Exception as e:
+                print(f"[ML] Detection error: {e}")
+
+        # ── Write to log file (anomaly fields now included) ──
         with open(LOG_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")
+
         if MONGO_ENABLED:
             try:
                 collection.insert_one({k: v for k, v in entry.items()})
             except Exception as e:
                 print(f"[MongoDB] Write failed: {e}")
+
+        # ── Blockchain logging ──
+        if BLOCKCHAIN_ENABLED:
+            try:
+                bc = log_to_blockchain(entry)
+                print(f"[Blockchain] Block #{bc.get('block','?')} | TX: {bc.get('tx_hash','')[:20]}...")
+            except Exception as e:
+                print(f"[Blockchain] Error: {e}")
         print(f"[{entry['timestamp']}] {entry['risk_level']} | {entry['attack_type']} | {entry['ip']} | {entry['country']}")
 
     def _load_all(self):
@@ -87,7 +124,7 @@ class AttackLogger:
         risk_levels  = Counter(e.get("risk_level", "LOW") for e in entries)
         countries    = Counter(e.get("country", "Unknown") for e in entries)
         ips          = Counter(e.get("ip", "Unknown") for e in entries)
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         one_hour_ago = (now - datetime.timedelta(hours=1)).isoformat()
         recent = [e for e in entries if e.get("timestamp", "") >= one_hour_ago]
         return {
@@ -101,7 +138,7 @@ class AttackLogger:
 
     def get_timeline(self):
         entries = self._load_all()
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         hourly = defaultdict(int)
         for e in entries:
             ts = e.get("timestamp", "")

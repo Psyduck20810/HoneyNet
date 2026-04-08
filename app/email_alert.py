@@ -2,19 +2,9 @@ import os
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from utils import load_env
 
-# ── Load .env file directly ──────────────────────────────
-def _load_env():
-    env_path = os.path.join(os.path.dirname(__file__), '../.env')
-    if os.path.exists(env_path):
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, val = line.split('=', 1)
-                    os.environ.setdefault(key.strip(), val.strip())
-
-_load_env()
+load_env()
 
 EMAIL_SENDER   = os.environ.get("EMAIL_SENDER", "")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
@@ -189,8 +179,12 @@ Time        : {entry.get('timestamp')}
 
     # ── Send email ───────────────────────────────────────
     try:
+        def _safe(val):
+            """Strip newlines to prevent email header injection."""
+            return str(val or '').replace('\r', '').replace('\n', '')
+
         msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"🔴 [{entry.get('risk_level')}] Honeypot Alert — {entry.get('attack_type')} from {entry.get('ip')}"
+        msg["Subject"] = f"🔴 [{_safe(entry.get('risk_level'))}] Honeypot Alert — {_safe(entry.get('attack_type'))} from {_safe(entry.get('ip'))}"
         msg["From"]    = EMAIL_SENDER
         msg["To"]      = EMAIL_RECEIVER
 

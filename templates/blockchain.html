@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Thomas Cook — Blockchain Audit Log</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:#0a0c10; --surface:#111318; --border:#1e2229;
+  --text:#c8d0e0; --dim:#4a5568; --orange:#ff6600;
+  --red:#ff3b6e; --green:#00e599; --blue:#2a5cff;
+  --purple:#a78bfa; --eth:#627eea;
+  --mono:"IBM Plex Mono",monospace; --sans:"IBM Plex Sans",sans-serif;
+}
+body { background:var(--bg); color:var(--text); font-family:var(--sans); min-height:100vh; }
+.topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:12px 24px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+.logo { color:var(--eth); font-weight:700; font-size:16px; }
+.nav { display:flex; gap:4px; }
+.nav a { padding:6px 14px; border-radius:4px; font-size:12px; text-decoration:none; color:var(--dim); font-family:var(--mono); transition:all 0.2s; }
+.nav a:hover, .nav a.active { color:var(--eth); background:rgba(98,126,234,0.08); }
+.main { max-width:1100px; margin:0 auto; padding:28px 24px; }
+
+/* HERO */
+.hero { background:linear-gradient(135deg,rgba(98,126,234,0.15),rgba(167,139,250,0.05)); border:1px solid rgba(98,126,234,0.3); border-radius:12px; padding:28px; margin-bottom:24px; position:relative; overflow:hidden; }
+.hero::before { content:""; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--eth),var(--purple)); }
+.hero-title { font-size:22px; font-weight:700; color:#e2e8f0; margin-bottom:4px; }
+.hero-sub { font-size:13px; color:var(--dim); margin-bottom:20px; }
+.hero-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+.hero-stat { background:rgba(0,0,0,0.3); border-radius:8px; padding:14px; border:1px solid rgba(255,255,255,0.05); text-align:center; }
+.hero-stat-val { font-size:24px; font-weight:700; font-family:var(--mono); }
+.hero-stat-lbl { font-size:9px; color:var(--dim); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; font-family:var(--mono); }
+
+/* NETWORK BADGE */
+.network-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(98,126,234,0.1); border:1px solid rgba(98,126,234,0.3); border-radius:20px; padding:6px 16px; font-size:12px; font-family:var(--mono); color:var(--eth); margin-bottom:24px; }
+.net-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); animation:pulse 2s infinite; }
+@keyframes pulse { 0%{opacity:1} 50%{opacity:0.4} 100%{opacity:1} }
+
+/* VALID BADGE */
+.valid-badge { display:inline-flex; align-items:center; gap:6px; background:rgba(0,229,153,0.1); border:1px solid rgba(0,229,153,0.3); border-radius:4px; padding:4px 12px; font-size:11px; font-family:var(--mono); color:var(--green); }
+
+/* BLOCKS */
+.blocks-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.blocks-title { font-size:11px; font-weight:700; color:#e2e8f0; text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); }
+.block-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:12px; overflow:hidden; animation:fadeIn 0.3s ease; }
+.block-card.genesis { border-color:rgba(98,126,234,0.4); }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.block-header { padding:12px 20px; background:#0d1017; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); }
+.block-num { font-size:13px; font-weight:700; color:var(--eth); font-family:var(--mono); }
+.block-time { font-size:10px; color:var(--dim); font-family:var(--mono); }
+.block-body { padding:14px 20px; }
+.hash-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.hash-label { font-size:9px; color:var(--dim); text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); width:100px; flex-shrink:0; }
+.hash-val { font-size:11px; font-family:var(--mono); color:var(--green); word-break:break-all; }
+.hash-val.prev { color:var(--dim); }
+.attack-data { background:#0d1017; border-radius:6px; padding:10px 14px; margin-top:10px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.data-item { }
+.data-label { font-size:9px; color:var(--dim); text-transform:uppercase; letter-spacing:0.06em; font-family:var(--mono); margin-bottom:2px; }
+.data-val { font-size:11px; font-family:var(--mono); color:var(--text); }
+.data-val.high { color:var(--red); }
+.data-val.medium { color:var(--orange); }
+.data-val.low { color:var(--green); }
+
+/* CHAIN VISUAL */
+.chain-connector { display:flex; align-items:center; justify-content:center; height:20px; margin:-4px 0; }
+.chain-line { width:2px; height:20px; background:linear-gradient(180deg,var(--eth),transparent); }
+
+.panel { background:var(--surface); border:1px solid var(--border); border-radius:10px; overflow:hidden; margin-bottom:20px; }
+.panel-header { padding:14px 20px; border-bottom:1px solid var(--border); }
+.panel-title { font-size:11px; font-weight:700; color:#e2e8f0; text-transform:uppercase; letter-spacing:0.08em; font-family:var(--mono); }
+.panel-body { padding:16px 20px; font-family:var(--mono); font-size:11px; color:var(--dim); line-height:1.8; }
+
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:#1e2229; border-radius:2px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">⛓️ Thomas Cook — Blockchain Audit Log</div>
+  <div class="nav">
+    <a href="/dashboard">📊 Dashboard</a>
+    <a href="/sessions">🎬 Sessions</a>
+    <a href="/threat">🔍 Threat Intel</a>
+    <a href="/darkweb">🕸️ Dark Web</a>
+    <a href="/blockchain" class="active">⛓️ Blockchain</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-title">⛓️ Immutable Attack Log — Blockchain Secured</div>
+    <div class="hero-sub">Every attack is cryptographically hashed and stored on an immutable blockchain — tamper-proof audit trail</div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-val" style="color:var(--eth)" id="stat-blocks">—</div><div class="hero-stat-lbl">Total Blocks</div></div>
+      <div class="hero-stat"><div class="hero-stat-val" style="color:var(--green)" id="stat-valid">—</div><div class="hero-stat-lbl">Chain Valid</div></div>
+      <div class="hero-stat"><div class="hero-stat-val" style="color:var(--purple)" id="stat-network">—</div><div class="hero-stat-lbl">Network</div></div>
+      <div class="hero-stat"><div class="hero-stat-val" style="color:var(--orange)" id="stat-genesis">—</div><div class="hero-stat-lbl">Genesis Block</div></div>
+    </div>
+  </div>
+
+  <!-- NETWORK -->
+  <div id="network-badge" class="network-badge">
+    <div class="net-dot"></div>
+    <span id="network-name">Loading...</span>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="panel">
+    <div class="panel-header"><span class="panel-title">🔐 How Blockchain Security Works</span></div>
+    <div class="panel-body">
+      1. Every attack captured by honeypot is serialized to JSON<br>
+      2. SHA-256 cryptographic hash is computed from attack data<br>
+      3. Hash + previous block hash = new block added to chain<br>
+      4. Any modification to any past block invalidates ALL subsequent blocks<br>
+      5. Chain integrity is verified on every read — tamper-proof audit trail<br><br>
+      <span style="color:var(--green)">✅ Even if attacker deletes local logs — blockchain proof remains immutable</span>
+    </div>
+  </div>
+
+  <!-- BLOCKS -->
+  <div class="blocks-header">
+    <span class="blocks-title">⛓️ Blockchain — Last 10 Blocks</span>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button id="rebuild-btn" onclick="rebuildBlockchain()" style="background:rgba(255,102,0,0.15);border:1px solid rgba(255,102,0,0.4);color:#ff6600;font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:4px;cursor:pointer;">🔄 Sync with Attack Log</button>
+      <span id="chain-valid-badge"></span>
+    </div>
+  </div>
+  <div id="blocks-container">
+    <div style="text-align:center;padding:40px;color:var(--dim);font-family:var(--mono);">Loading blockchain...</div>
+  </div>
+
+</div>
+
+<script>
+async function loadBlockchain() {
+  try {
+    const res  = await fetch("/api/blockchain");
+    const data = await res.json();
+
+    document.getElementById("stat-blocks").textContent  = data.total_blocks;
+    document.getElementById("stat-valid").textContent   = data.chain_valid ? "✅ VALID" : "❌ INVALID";
+    document.getElementById("stat-network").textContent = data.network.includes("Sepolia") ? "Sepolia" : "Local";
+    document.getElementById("stat-genesis").textContent = data.genesis_hash.slice(0,8) + "...";
+    document.getElementById("network-name").textContent = "Connected to: " + data.network;
+
+    const badge = document.getElementById("chain-valid-badge");
+    badge.innerHTML = data.chain_valid
+      ? `<span class="valid-badge">✅ CHAIN INTEGRITY VERIFIED</span>`
+      : `<span class="valid-badge" style="color:var(--red);border-color:var(--red)">❌ CHAIN COMPROMISED</span>`;
+
+    const container = document.getElementById("blocks-container");
+    const chain     = [...data.chain].reverse();
+
+    container.innerHTML = chain.map((block, idx) => {
+      const isGenesis  = block.index === 0;
+      const attackData = block.data;
+      const riskClass  = (attackData.risk_level||"").toLowerCase();
+
+      return `
+        ${idx > 0 ? '<div class="chain-connector"><div class="chain-line"></div></div>' : ""}
+        <div class="block-card ${isGenesis ? "genesis" : ""}">
+          <div class="block-header">
+            <span class="block-num">${isGenesis ? "🌱 GENESIS BLOCK #0" : "⛓️ BLOCK #" + block.index}</span>
+            <span class="block-time">${block.timestamp}</span>
+          </div>
+          <div class="block-body">
+            <div class="hash-row">
+              <span class="hash-label">Block Hash</span>
+              <span class="hash-val">${block.hash}</span>
+            </div>
+            <div class="hash-row">
+              <span class="hash-label">Prev Hash</span>
+              <span class="hash-val prev">${block.previous_hash}</span>
+            </div>
+            ${!isGenesis ? `
+            <div class="attack-data">
+              <div class="data-item"><div class="data-label">IP Address</div><div class="data-val">${attackData.ip||"—"}</div></div>
+              <div class="data-item"><div class="data-label">Country</div><div class="data-val">${attackData.country||"—"}</div></div>
+              <div class="data-item"><div class="data-label">Attack Type</div><div class="data-val">${attackData.attack_type||"—"}</div></div>
+              <div class="data-item"><div class="data-label">Risk Level</div><div class="data-val ${riskClass}">${attackData.risk_level||"—"}</div></div>
+              <div class="data-item"><div class="data-label">Honeypot</div><div class="data-val">${attackData.honeypot||"—"}</div></div>
+              <div class="data-item"><div class="data-label">SHA-256</div><div class="data-val" style="font-size:9px;">${(attackData.hash||"").slice(0,20)}...</div></div>
+            </div>` : `
+            <div class="attack-data">
+              <div class="data-item" style="grid-column:span 3"><div class="data-label">Message</div><div class="data-val" style="color:var(--eth)">${attackData.message||""}</div></div>
+            </div>`}
+          </div>
+        </div>`;
+    }).join("");
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById("blocks-container").innerHTML =
+      `<div style="text-align:center;padding:40px;color:var(--red);font-family:var(--mono)">Error loading blockchain: ${e.message}</div>`;
+  }
+}
+
+async function rebuildBlockchain() {
+  const btn = document.getElementById("rebuild-btn");
+  btn.textContent = "⏳ Rebuilding...";
+  btn.disabled = true;
+  try {
+    const res  = await fetch("/api/admin/rebuild-blockchain", { method: "POST" });
+    const data = await res.json();
+    btn.textContent = `✅ Synced (${data.blocks_added} blocks)`;
+    setTimeout(() => { btn.textContent = "🔄 Sync with Attack Log"; btn.disabled = false; }, 3000);
+    loadBlockchain();
+  } catch(e) {
+    btn.textContent = "❌ Error — retry";
+    btn.disabled = false;
+  }
+}
+
+loadBlockchain();
+setInterval(loadBlockchain, 10000);
+</script>
+</body>
+</html>

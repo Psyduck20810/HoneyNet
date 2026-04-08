@@ -18,6 +18,11 @@ FAKE_COLLECTIONS = {
     "admin": ["system.users", "system.roles"],
 }
 
+# ── IMPORTANT: All data below is entirely SYNTHETIC / FAKE ───────────────────
+# These are honeypot decoy records designed to deceive and engage attackers.
+# Card numbers use the Luhn-valid test ranges (no real accounts); hashed
+# passwords are MD5 of well-known test strings; credentials are fabricated.
+# None of this data belongs to any real person or organisation.
 FAKE_DOCUMENTS = {
     "users": [
         {"_id": "1", "username": "admin", "password": "e10adc3949ba59abbe56e057f20f883e", "role": "superadmin", "email": "admin@thomascook.com"},
@@ -25,6 +30,7 @@ FAKE_DOCUMENTS = {
         {"_id": "3", "username": "finance", "password": "d8578edf8458ce06fbc5bb76a58c5ca4", "role": "manager", "email": "finance@thomascook.com"},
     ],
     "cards": [
+        # Synthetic Luhn-valid test card numbers — NOT real payment data
         {"_id": "1", "customer_id": "CUS10021", "card_number": "4532015112830366", "expiry": "12/27", "cvv": "123", "type": "VISA"},
         {"_id": "2", "customer_id": "CUS10022", "card_number": "5425233430109903", "expiry": "09/26", "cvv": "456", "type": "Mastercard"},
     ],
@@ -34,6 +40,7 @@ FAKE_DOCUMENTS = {
         {"_id": "3", "key": "stripe_secret", "value": "sk_live_EXAMPLESECRET456789"},
     ],
 }
+
 
 
 def build_fake_mongo_response(request_data: bytes, client_ip: str) -> tuple:

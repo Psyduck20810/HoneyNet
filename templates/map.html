@@ -6,6 +6,8 @@
 <title>Thomas Cook — Attack World Map</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- Leaflet.heat heatmap plugin -->
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -30,7 +32,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); height:
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
 /* STATS BAR */
-.statsbar { background:rgba(17,19,24,0.95); border-bottom:1px solid var(--border); padding:10px 24px; display:flex; gap:32px; align-items:center; flex-shrink:0; }
+.statsbar { background:rgba(17,19,24,0.95); border-bottom:1px solid var(--border); padding:10px 24px; display:flex; gap:24px; align-items:center; flex-shrink:0; }
 .stat-item { display:flex; flex-direction:column; align-items:center; }
 .stat-val { font-size:20px; font-weight:700; color:var(--text); font-family:var(--mono); line-height:1; }
 .stat-val.red { color:var(--red); }
@@ -38,6 +40,19 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); height:
 .stat-val.green { color:var(--green); }
 .stat-lbl { font-size:9px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px; font-family:var(--mono); }
 .stat-div { width:1px; height:32px; background:var(--border); }
+
+/* VIEW TOGGLE */
+.view-toggle { display:flex; gap:4px; margin-left:auto; }
+.toggle-btn {
+  padding:6px 14px; border-radius:4px; font-size:11px; font-family:var(--mono);
+  border:1px solid var(--border); background:transparent; color:var(--dim);
+  cursor:pointer; transition:all 0.2s; white-space:nowrap;
+}
+.toggle-btn:hover { color:var(--orange); border-color:rgba(255,102,0,0.4); }
+.toggle-btn.active {
+  color:var(--orange); background:rgba(255,102,0,0.12);
+  border-color:rgba(255,102,0,0.5);
+}
 
 /* MAP */
 #map { flex:1; z-index:1; }
@@ -60,29 +75,39 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); height:
 .leaflet-popup-close-button { color:#4a5568 !important; }
 
 /* LEGEND */
-.legend { position:absolute; bottom:32px; left:16px; z-index:1000; background:rgba(17,19,24,0.95); border:1px solid #1e2229; border-radius:8px; padding:14px 16px; font-family:var(--mono); font-size:11px; }
+.legend {
+  position:absolute; bottom:32px; left:16px; z-index:1000;
+  background:rgba(17,19,24,0.95); border:1px solid #1e2229;
+  border-radius:8px; padding:14px 16px; font-family:var(--mono); font-size:11px;
+}
 .legend-title { color:#4a5568; font-size:10px; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px; }
 .legend-item { display:flex; align-items:center; gap:8px; margin-bottom:6px; color:#c8d0e0; }
 .legend-dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
 
+/* Heatmap gradient legend */
+.heat-gradient {
+  width:120px; height:10px; border-radius:4px; margin-bottom:6px;
+  background: linear-gradient(to right, #2a5cff, #00e599, #ff8c42, #ff3b6e);
+}
+.heat-labels { display:flex; justify-content:space-between; font-size:9px; color:var(--dim); }
+
 /* RECENT PANEL */
-.recent-panel { position:absolute; top:16px; right:16px; z-index:1000; background:rgba(17,19,24,0.95); border:1px solid #1e2229; border-radius:8px; width:280px; max-height:400px; overflow:hidden; display:flex; flex-direction:column; }
+.recent-panel { position:absolute; top:16px; right:16px; z-index:1000; background:rgba(17,19,24,0.95); border:1px solid #1e2229; border-radius:8px; width:280px; max-height:420px; overflow:hidden; display:flex; flex-direction:column; }
 .recent-header { padding:12px 16px; border-bottom:1px solid #1e2229; display:flex; justify-content:space-between; align-items:center; }
 .recent-title { font-size:11px; font-weight:700; color:#e2e8f0; font-family:var(--mono); text-transform:uppercase; letter-spacing:0.05em; }
 .recent-list { overflow-y:auto; flex:1; }
 .recent-item { padding:10px 16px; border-bottom:1px solid #0d1017; display:flex; gap:10px; align-items:flex-start; cursor:pointer; transition:background 0.15s; }
 .recent-item:hover { background:rgba(255,102,0,0.05); }
 .risk-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:3px; }
-.risk-dot.HIGH { background:#ff3b6e; box-shadow:0 0 6px #ff3b6e; }
+.risk-dot.HIGH   { background:#ff3b6e; box-shadow:0 0 6px #ff3b6e; }
 .risk-dot.MEDIUM { background:#ff8c42; box-shadow:0 0 6px #ff8c42; }
-.risk-dot.LOW { background:#00e599; box-shadow:0 0 6px #00e599; }
-.recent-info { flex:1; }
-.recent-ip { font-family:var(--mono); font-size:11px; color:#2a5cff; font-weight:700; }
-.recent-type { font-size:11px; color:#c8d0e0; margin-top:1px; }
-.recent-loc { font-size:10px; color:#4a5568; margin-top:1px; }
+.risk-dot.LOW    { background:#00e599; box-shadow:0 0 6px #00e599; }
+.recent-info { flex:1; min-width:0; }
+.recent-ip   { font-family:var(--mono); font-size:11px; color:#2a5cff; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.recent-type { font-size:11px; color:#c8d0e0; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.recent-loc  { font-size:10px; color:#4a5568; margin-top:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .recent-time { font-size:9px; color:#2a3a55; font-family:var(--mono); white-space:nowrap; }
 
-/* PULSE animation for new attacks */
 @keyframes ripple {
   0%   { transform:scale(1);   opacity:1; }
   100% { transform:scale(3.5); opacity:0; }
@@ -99,7 +124,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); height:
     <div class="nav-links">
       <a href="/dashboard">📊 Dashboard</a>
       <a href="/map" class="active">🗺️ Attack Map</a>
-      <a href="/" >🎯 Honeypot</a>
+      <a href="/">🎯 Honeypot</a>
     </div>
   </div>
   <div class="topbar-right">
@@ -135,17 +160,35 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); height:
     <div class="stat-val" id="s-top-attack" style="font-size:14px;color:#ff6600;">—</div>
     <div class="stat-lbl">Top Attack</div>
   </div>
+
+  <!-- VIEW TOGGLE -->
+  <div class="view-toggle">
+    <button class="toggle-btn" id="btn-markers" onclick="setView('markers')">📍 Markers</button>
+    <button class="toggle-btn active" id="btn-both"    onclick="setView('both')">✨ Both</button>
+    <button class="toggle-btn" id="btn-heat"    onclick="setView('heat')">🔥 Heatmap</button>
+  </div>
 </div>
 
 <!-- MAP -->
 <div id="map"></div>
 
 <!-- LEGEND -->
-<div class="legend">
-  <div class="legend-title">Risk Level</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#ff3b6e;box-shadow:0 0 8px #ff3b6e;"></div> HIGH Risk</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#ff8c42;box-shadow:0 0 8px #ff8c42;"></div> MEDIUM Risk</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#00e599;box-shadow:0 0 8px #00e599;"></div> LOW Risk</div>
+<div class="legend" id="legend-box">
+  <div class="legend-title" id="legend-title">Risk Level</div>
+
+  <!-- Marker legend (shown in markers / both mode) -->
+  <div id="legend-markers">
+    <div class="legend-item"><div class="legend-dot" style="background:#ff3b6e;box-shadow:0 0 8px #ff3b6e;"></div> HIGH Risk</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff8c42;box-shadow:0 0 8px #ff8c42;"></div> MEDIUM Risk</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#00e599;box-shadow:0 0 8px #00e599;"></div> LOW Risk</div>
+  </div>
+
+  <!-- Heatmap legend (shown in heat / both mode) -->
+  <div id="legend-heat" style="display:none;margin-top:10px;">
+    <div class="legend-title" style="margin-bottom:6px;">Attack Density</div>
+    <div class="heat-gradient"></div>
+    <div class="heat-labels"><span>Low</span><span>Medium</span><span>High</span></div>
+  </div>
 </div>
 
 <!-- RECENT ATTACKS PANEL -->
@@ -158,6 +201,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); height:
 </div>
 
 <script>
+// ── Escape helper (XSS prevention) ──────────────────────
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
 // ── Init map ─────────────────────────────────────────────
 const map = L.map('map', {
   center: [20, 0],
@@ -173,18 +223,90 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 // ── State ────────────────────────────────────────────────
-let markers    = {};
-let recentData = [];
+let markerLayer  = L.layerGroup().addTo(map);
+let heatLayer    = null;
+let allPoints    = [];   // raw API points
+let currentView  = 'both';
 
 // ── Risk config ──────────────────────────────────────────
 const riskConfig = {
-  HIGH:   { color:'#ff3b6e', glow:'#ff3b6e', radius:10, weight:2 },
-  MEDIUM: { color:'#ff8c42', glow:'#ff8c42', radius:8,  weight:1.5 },
-  LOW:    { color:'#00e599', glow:'#00e599', radius:6,  weight:1 },
+  HIGH:   { color:'#ff3b6e', radius:10, weight:2 },
+  MEDIUM: { color:'#ff8c42', radius:8,  weight:1.5 },
+  LOW:    { color:'#00e599', radius:6,  weight:1 },
 };
+const SAFE_RISKS = new Set(['HIGH','MEDIUM','LOW']);
 
 function getRisk(level) {
-  return riskConfig[level] || riskConfig.LOW;
+  return riskConfig[SAFE_RISKS.has(level) ? level : 'LOW'];
+}
+
+// ── Risk score → heatmap intensity (0.0–1.0) ─────────────
+function riskToIntensity(entry) {
+  const score = parseFloat(entry.risk_score) || 0;
+  if (entry.risk_level === 'HIGH'   || score >= 7) return 1.0;
+  if (entry.risk_level === 'MEDIUM' || score >= 4) return 0.55;
+  return 0.25;
+}
+
+// ── Build / rebuild the heatmap layer ────────────────────
+function buildHeatLayer(points) {
+  if (heatLayer) {
+    map.removeLayer(heatLayer);
+    heatLayer = null;
+  }
+  if (points.length === 0) return;
+
+  const heatPoints = points
+    .filter(p => p.lat !== 0 || p.lon !== 0)
+    .map(p => [p.lat, p.lon, riskToIntensity(p)]);
+
+  heatLayer = L.heatLayer(heatPoints, {
+    radius:  28,
+    blur:    18,
+    maxZoom: 10,
+    max:     1.0,
+    gradient: {
+      0.0:  '#1a2a6c',   // deep blue  — sparse / low risk
+      0.3:  '#00e599',   // green      — moderate
+      0.6:  '#ff8c42',   // orange     — elevated
+      1.0:  '#ff3b6e',   // red        — high density / high risk
+    },
+  });
+}
+
+// ── Apply current view mode to map layers ─────────────────
+function applyView() {
+  // Markers
+  if (currentView === 'heat') {
+    map.removeLayer(markerLayer);
+  } else {
+    if (!map.hasLayer(markerLayer)) markerLayer.addTo(map);
+  }
+
+  // Heatmap
+  if (currentView === 'markers') {
+    if (heatLayer && map.hasLayer(heatLayer)) map.removeLayer(heatLayer);
+  } else {
+    if (heatLayer && !map.hasLayer(heatLayer)) heatLayer.addTo(map);
+  }
+
+  // Legend
+  const showMarkers = currentView !== 'heat';
+  const showHeat    = currentView !== 'markers';
+  document.getElementById('legend-markers').style.display = showMarkers ? '' : 'none';
+  document.getElementById('legend-heat').style.display    = showHeat    ? '' : 'none';
+  document.getElementById('legend-title').textContent     =
+    currentView === 'markers' ? 'Risk Level' :
+    currentView === 'heat'    ? 'Attack Density' : 'Risk Level';
+}
+
+// ── Toggle button handler ─────────────────────────────────
+function setView(mode) {
+  currentView = mode;
+  ['markers','both','heat'].forEach(m => {
+    document.getElementById('btn-' + m).classList.toggle('active', m === mode);
+  });
+  applyView();
 }
 
 // ── Create pulsing circle marker ─────────────────────────
@@ -200,28 +322,30 @@ function createMarker(point) {
     fillOpacity: 0.7,
   });
 
-  // Popup content
-  const ts = (point.timestamp || '').substring(0,16).replace('T',' ');
+  const ts        = esc((point.timestamp || '').substring(0,16).replace('T',' '));
+  const safeRisk  = SAFE_RISKS.has(point.risk_level) ? point.risk_level : 'LOW';
+  const riskColor = riskConfig[safeRisk].color;
+
   marker.bindPopup(`
     <div class="attack-popup">
-      <div class="popup-header" style="color:${cfg.color}">
-        ${point.risk_level} RISK — ${point.attack_type}
+      <div class="popup-header" style="color:${riskColor}">
+        ${safeRisk} RISK — ${esc(point.attack_type)}
       </div>
       <div class="popup-row">
         <span class="popup-label">IP</span>
-        <span class="popup-val" style="color:#2a5cff">${point.ip}</span>
+        <span class="popup-val" style="color:#2a5cff">${esc(point.ip)}</span>
       </div>
       <div class="popup-row">
         <span class="popup-label">Location</span>
-        <span class="popup-val">${point.city}, ${point.country}</span>
+        <span class="popup-val">${esc(point.city)}, ${esc(point.country)}</span>
       </div>
       <div class="popup-row">
         <span class="popup-label">Attack</span>
-        <span class="popup-val ${point.risk_level}">${point.attack_type}</span>
+        <span class="popup-val ${safeRisk}">${esc(point.attack_type)}</span>
       </div>
       <div class="popup-row">
         <span class="popup-label">Risk Score</span>
-        <span class="popup-val ${point.risk_level}">${point.risk_score}/10</span>
+        <span class="popup-val ${safeRisk}">${parseFloat(point.risk_score)||0}/10</span>
       </div>
       <div class="popup-row">
         <span class="popup-label">Time</span>
@@ -233,22 +357,34 @@ function createMarker(point) {
   return marker;
 }
 
-// ── Fetch and render map points ──────────────────────────
+// ── Fetch and render map points ───────────────────────────
 async function fetchMapData() {
   try {
     const res    = await fetch('/api/mapdata');
     const points = await res.json();
 
+    // Only add new markers (avoid duplicates)
+    const existing = new Set(
+      markerLayer.getLayers().map(m => {
+        const ll = m.getLatLng();
+        return `${ll.lat},${ll.lng}`;
+      })
+    );
+
     points.forEach(point => {
+      if (point.lat === 0 && point.lon === 0) return;
       const key = `${point.lat},${point.lon}`;
-      if (!markers[key]) {
-        const m = createMarker(point);
-        m.addTo(map);
-        markers[key] = m;
+      if (!existing.has(key)) {
+        createMarker(point).addTo(markerLayer);
       }
     });
 
-    document.getElementById('s-points').textContent = Object.keys(markers).length;
+    // Rebuild heatmap with full dataset every refresh
+    allPoints = points;
+    buildHeatLayer(allPoints);
+    applyView();
+
+    document.getElementById('s-points').textContent = points.length;
     document.getElementById('last-update').textContent =
       'Updated ' + new Date().toLocaleTimeString();
 
@@ -257,26 +393,22 @@ async function fetchMapData() {
   }
 }
 
-// ── Fetch stats for top bar ──────────────────────────────
+// ── Fetch stats for top bar ───────────────────────────────
 async function fetchStats() {
   try {
     const res   = await fetch('/api/stats');
     const stats = await res.json();
-    document.getElementById('s-total').textContent =
-      stats.total || 0;
-    document.getElementById('s-high').textContent =
-      (stats.risk_levels || {}).HIGH || 0;
-
-    const countries = Object.keys(stats.top_countries || {}).length;
-    document.getElementById('s-countries').textContent = countries;
-
+    document.getElementById('s-total').textContent    = stats.total || 0;
+    document.getElementById('s-high').textContent     = (stats.risk_levels || {}).HIGH || 0;
+    document.getElementById('s-countries').textContent =
+      Object.keys(stats.top_countries || {}).length;
     const types = stats.attack_types || {};
     const top   = Object.keys(types).sort((a,b) => types[b]-types[a])[0] || '—';
     document.getElementById('s-top-attack').textContent = top;
   } catch(e) {}
 }
 
-// ── Fetch recent attacks for side panel ─────────────────
+// ── Fetch recent attacks for side panel ──────────────────
 async function fetchRecent() {
   try {
     const res     = await fetch('/api/recent');
@@ -284,15 +416,17 @@ async function fetchRecent() {
     const list    = document.getElementById('recent-list');
 
     list.innerHTML = entries.slice(0,15).map(e => {
-      const ts  = (e.timestamp||'').substring(11,16) + ' UTC';
-      const cfg = getRisk(e.risk_level);
+      const ts       = esc((e.timestamp||'').substring(11,16)) + ' UTC';
+      const safeRisk = SAFE_RISKS.has(e.risk_level) ? e.risk_level : 'LOW';
+      const lat      = parseFloat(e.lat) || 0;
+      const lon      = parseFloat(e.lon) || 0;
       return `
-        <div class="recent-item" onclick="flyTo(${e.lat||0},${e.lon||0})">
-          <div class="risk-dot ${e.risk_level}"></div>
+        <div class="recent-item" onclick="flyTo(${lat},${lon})">
+          <div class="risk-dot ${safeRisk}"></div>
           <div class="recent-info">
-            <div class="recent-ip">${e.ip||'?'}</div>
-            <div class="recent-type">${e.attack_type||'?'}</div>
-            <div class="recent-loc">📍 ${e.city||'?'}, ${e.country||'?'}</div>
+            <div class="recent-ip">${esc(e.ip||'?')}</div>
+            <div class="recent-type">${esc(e.attack_type||'?')}</div>
+            <div class="recent-loc">📍 ${esc(e.city||'?')}, ${esc(e.country||'?')}</div>
           </div>
           <div class="recent-time">${ts}</div>
         </div>`;
@@ -300,13 +434,13 @@ async function fetchRecent() {
   } catch(e) {}
 }
 
-// ── Fly to location when clicking recent item ────────────
+// ── Fly to location when clicking recent item ─────────────
 function flyTo(lat, lon) {
   if (lat === 0 && lon === 0) return;
   map.flyTo([lat, lon], 6, { duration: 1.5 });
 }
 
-// ── Clock ────────────────────────────────────────────────
+// ── Clock ─────────────────────────────────────────────────
 function updateClock() {
   document.getElementById('clock').textContent =
     new Date().toUTCString().replace('GMT','UTC');
@@ -318,10 +452,10 @@ fetchStats();
 fetchRecent();
 updateClock();
 
-setInterval(fetchMapData,  15000);
-setInterval(fetchStats,    15000);
-setInterval(fetchRecent,   10000);
-setInterval(updateClock,   1000);
+setInterval(fetchMapData, 15000);
+setInterval(fetchStats,   15000);
+setInterval(fetchRecent,  10000);
+setInterval(updateClock,  1000);
 </script>
 
 </body>

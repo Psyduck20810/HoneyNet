@@ -127,6 +127,7 @@ DARK_WEB_MENTIONS = [
 
 # ── Threat summary ────────────────────────────────────────
 def get_dark_web_summary():
+    import datetime
     critical = sum(1 for m in DARK_WEB_MENTIONS if m["threat_level"] == "CRITICAL")
     high     = sum(1 for m in DARK_WEB_MENTIONS if m["threat_level"] == "HIGH")
     medium   = sum(1 for m in DARK_WEB_MENTIONS if m["threat_level"] == "MEDIUM")
@@ -143,4 +144,9 @@ def get_dark_web_summary():
         "mentions":       DARK_WEB_MENTIONS,
         "forums_found":   list(set(m["forum"] for m in DARK_WEB_MENTIONS)),
         "categories":     list(set(m["category"] for m in DARK_WEB_MENTIONS)),
+        # NOTE: This data is intentionally simulated for demonstration purposes.
+        # In a real deployment this would be replaced with a live dark web
+        # monitoring feed (e.g. DarkOwl, Flashpoint, or a custom Tor crawler).
+        "simulated":      True,
+        "generated_at":   datetime.datetime.utcnow().isoformat(),
     }

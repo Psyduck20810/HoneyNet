@@ -1,18 +1,8 @@
 import os
 import requests
+from utils import load_env
 
-# ── Load from .env file directly ──────────────────────────
-def _load_env():
-    env_path = os.path.join(os.path.dirname(__file__), '../.env')
-    if os.path.exists(env_path):
-        with open(env_path) as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#') and '=' in line:
-                    key, val = line.split('=', 1)
-                    os.environ.setdefault(key.strip(), val.strip())
-
-_load_env()
+load_env()
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID   = os.environ.get("TELEGRAM_CHAT_ID", "")

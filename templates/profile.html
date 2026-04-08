@@ -170,6 +170,11 @@ function threatColor(level) {
   return {CRITICAL:"#ff3b6e",HIGH:"#ff3b6e",MEDIUM:"#ff8c42",LOW:"#ff6600",CLEAN:"#00e599",UNKNOWN:"#4a5568"}[level] || "#4a5568";
 }
 
+function sanitize(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
 async function loadProfile() {
   try {
     const res  = await fetch('/api/profile/' + encodeURIComponent(ip));
@@ -295,7 +300,7 @@ async function loadProfile() {
                       <span class="event-time">${formatTime(e.timestamp)}</span>
                     </div>
                     <div class="event-endpoint">${e.endpoint}</div>
-                    ${e.payload ? `<div class="event-payload">${e.payload.substring(0,80)}</div>` : ''}
+                    ${e.payload ? `<div class="event-payload">${sanitize(String(e.payload).substring(0,80))}</div>` : ''}
                   </div>
                 </div>`).join('')}
             </div>

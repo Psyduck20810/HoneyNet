@@ -1,14 +1,25 @@
-# environment
+# environment & secrets
 .env
 venv/
+app/venv/
 
 # logs
 logs/
+*.log
 
 # python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# ML model (auto-regenerated on startup)
+*.pkl
 
 # OS
 .DS_Store
 Thumbs.db
+
+# IDE
+.vscode/
+.idea/

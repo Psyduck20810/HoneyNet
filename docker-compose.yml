@@ -4,11 +4,21 @@ services:
   honeypot:
     build: .
     ports:
-      - "80:5000"
+      - "80:5000"       # Web honeypot (Flask)
+      - "2222:2222"     # SSH honeypot
+      - "27017:27017"   # MongoDB honeypot
+      - "2525:2525"     # SMTP email honeypot
     environment:
       - MONGO_URI=${MONGO_URI}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - EMAIL_SENDER=${EMAIL_SENDER}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD}
+      - EMAIL_RECEIVER=${EMAIL_RECEIVER}
+      - DASHBOARD_USER=${DASHBOARD_USER}
+      - DASHBOARD_PASS=${DASHBOARD_PASS}
+      - ABUSEIPDB_KEY=${ABUSEIPDB_KEY:-}
+      - GREYNOISE_KEY=${GREYNOISE_KEY:-}
     volumes:
       - ./logs:/honeypot/logs
     restart: unless-stopped

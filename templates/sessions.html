@@ -177,6 +177,11 @@ function calcDuration(first, last) {
 }
 
 // ── Load sessions ────────────────────────────────────────
+function sanitize(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
 async function loadSessions() {
   try {
     const res = await fetch('/api/sessions');
@@ -238,7 +243,10 @@ function showSession(idx) {
   // Build timeline events
   const timeline = s.events.map((e, i) => {
     const icon    = getIcon(e.attack_type);
-    const payload = e.payload ? e.payload.substring(0,80) : '';
+    const rawPayload = e.payload ? e.payload.substring(0,80) : '';
+    const safePayload = sanitize(rawPayload);
+    const safeAttack  = sanitize(e.attack_type);
+    const safeEndpoint= sanitize(e.endpoint);
     const isDanger = e.risk_level === 'HIGH' || e.risk_level === 'MEDIUM';
 
     return `
@@ -255,10 +263,10 @@ function showSession(idx) {
           <div class="event-endpoint">${e.endpoint}</div>
           ${e.username && e.username !== 'post-login-visitor' && e.username !== 'recon-scanner'
             ? `<div style="font-size:11px;color:var(--dim);margin-top:4px;">
-                👤 Username: <span style="color:#ff8c42;">${e.username}</span>
+                👤 Username: <span style="color:#ff8c42;">${sanitize(e.username)}</span>
                </div>` : ''}
-          ${payload
-            ? `<div class="event-payload ${isDanger ? 'danger' : ''}">${payload}</div>`
+          ${rawPayload
+            ? `<div class="event-payload ${isDanger ? 'danger' : ''}">${safePayload}</div>`
             : ''}
         </div>
       </div>`;

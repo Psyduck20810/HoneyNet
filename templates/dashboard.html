@@ -507,6 +507,8 @@
    onmouseout="this.style.background='transparent'">
   🎬 Session Replay
 </a>
+<a href="/blockchain" style="display:inline-flex;align-items:center;gap:8px;background:transparent;color:#627eea;text-decoration:none;padding:8px 18px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:0.05em;font-family:var(--mono);border:1px solid #627eea;transition:all 0.2s;margin-right:16px;" onmouseover="this.style.background='rgba(98,126,234,0.1)'" onmouseout="this.style.background='transparent'">⛓️ Blockchain</a>
+<a href="/anomaly" style="display:inline-flex;align-items:center;gap:8px;background:transparent;color:#fbbf24;text-decoration:none;padding:8px 18px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:0.05em;font-family:var(--mono);border:1px solid #fbbf24;transition:all 0.2s;margin-right:16px;" onmouseover="this.style.background='rgba(251,191,36,0.1)'" onmouseout="this.style.background='transparent'">🤖 Anomaly</a>
 <a href="/darkweb" style="
   display:inline-flex;
   align-items:center;
@@ -846,13 +848,20 @@ function initCharts() {
 // ─────────────────────────────────────────
 async function refreshStats() {
   try {
-    const [statsRes, timelineRes, recentRes] = await Promise.all([
+    const [statsRes, timelineRes, recentRes, anomalyRes] = await Promise.all([
       fetch('/api/stats'),
       fetch('/api/timeline'),
       fetch('/api/recent'),
+      fetch('/api/anomaly'),
     ]);
 
     const stats    = await statsRes.json();
+    const anomData = await anomalyRes.json();
+    // Update anomaly card
+    const aEl = document.getElementById('stat-anomalies');
+    const aRl = document.getElementById('stat-anomaly-rate');
+    if(aEl) aEl.textContent = anomData.anomalies_found || 0;
+    if(aRl) aRl.textContent = 'Anomaly rate: ' + (anomData.anomaly_rate || 0) + '%';
     const timeline = await timelineRes.json();
     const recent   = await recentRes.json();
 
@@ -894,6 +903,18 @@ async function fetchHoneypotStats() {
   }
 }
 
+async function fetchFilteredFeed(type) {
+  try {
+    const url  = type === 'ALL' ? '/api/recent' : `/api/recent?type=${type}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    allFeedEntries = data || [];
+    renderFilteredFeed();
+  } catch(e) {
+    console.error('Filter fetch error:', e);
+  }
+}
+
 function filterByType(type) {
   currentFilter = type;
 
@@ -917,8 +938,8 @@ function filterByType(type) {
     }
   });
 
-  // Re-render feed with filter
-  renderFilteredFeed();
+  // Fetch from server filtered by type — not just the local 20 entries
+  fetchFilteredFeed(type);
 }
 
 function renderFilteredFeed() {
@@ -948,27 +969,30 @@ function renderFilteredFeed() {
   }
 
   feedEl.innerHTML = filtered.slice(0,20).map(e => {
-    const htype     = e.honeypot_type || 'WEB';
+    const SAFE_HTYPES = new Set(['WEB','SSH','DATABASE','EMAIL']);
+    const htype     = SAFE_HTYPES.has(e.honeypot_type) ? e.honeypot_type : 'WEB';
     const typeColor = typeColors[htype] || '#ff6600';
     const typeIcon  = typeIcons[htype]  || '🌐';
-    const riskColor = e.risk_level === 'HIGH' ? '#ff3b6e' : e.risk_level === 'MEDIUM' ? '#ff8c42' : '#00e599';
+    const SAFE_RISKS = new Set(['HIGH','MEDIUM','LOW']);
+    const riskLevel = SAFE_RISKS.has(e.risk_level) ? e.risk_level : 'LOW';
+    const riskColor = riskLevel === 'HIGH' ? '#ff3b6e' : riskLevel === 'MEDIUM' ? '#ff8c42' : '#00e599';
 
     return `
       <div style="padding:10px 16px;border-bottom:1px solid #0d1017;display:flex;align-items:flex-start;gap:12px;transition:background 0.2s;" onmouseover="this.style.background='#0d1017'" onmouseout="this.style.background='transparent'">
         <div style="width:6px;height:6px;border-radius:50%;background:${riskColor};margin-top:5px;flex-shrink:0;box-shadow:0 0 6px ${riskColor};"></div>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-            <span style="font-size:12px;font-weight:700;color:#e2e8f0;">${e.attack_type || 'Unknown'}</span>
-            <span style="font-size:9px;color:#4a5568;font-family:var(--mono);">${(e.timestamp||'').substring(11,19)}</span>
+            <span style="font-size:12px;font-weight:700;color:#e2e8f0;">${escHtml(e.attack_type || 'Unknown')}</span>
+            <span style="font-size:9px;color:#4a5568;font-family:var(--mono);">${escHtml((e.timestamp||'').substring(11,19))}</span>
           </div>
           <div style="font-size:11px;color:#4a5568;margin-bottom:3px;">
-            <span style="color:#2a5cff;font-family:var(--mono);">${e.ip||'?'}</span>
-            · ${e.city||'?'}, ${e.country||'?'}
+            <span style="color:#2a5cff;font-family:var(--mono);">${escHtml(e.ip||'?')}</span>
+            · ${escHtml(e.city||'?')}, ${escHtml(e.country||'?')}
           </div>
           <div style="display:flex;gap:6px;align-items:center;">
             <span style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,0.04);color:${typeColor};border:1px solid ${typeColor}33;font-family:var(--mono);">${typeIcon} ${htype}</span>
-            <span style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,0.04);color:${riskColor};font-family:var(--mono);">${e.risk_level||'?'}</span>
-            <span style="font-size:10px;color:#2a3a55;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">${(e.payload||'').substring(0,50)}</span>
+            <span style="font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(255,255,255,0.04);color:${riskColor};font-family:var(--mono);">${riskLevel}</span>
+            <span style="font-size:10px;color:#2a3a55;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">${escHtml((e.payload||'').substring(0,50))}</span>
           </div>
         </div>
       </div>`;
@@ -1136,21 +1160,24 @@ function updateFeed(entries) {
     return;
   }
 
-  feed.innerHTML = entries.map(e => `
-    <div class="feed-item ${e.risk_level || 'LOW'}">
-      <span class="risk-badge ${e.risk_level || 'LOW'}">${e.risk_level || 'LOW'}</span>
+  const SAFE_RISKS = new Set(['HIGH','MEDIUM','LOW']);
+  feed.innerHTML = entries.map(e => {
+    const riskLevel = SAFE_RISKS.has(e.risk_level) ? e.risk_level : 'LOW';
+    return `
+    <div class="feed-item ${riskLevel}">
+      <span class="risk-badge ${riskLevel}">${riskLevel}</span>
       <div>
-        <div class="feed-ip">${e.ip || '—'}</div>
-        <div class="feed-type">${e.attack_type || 'Normal'}</div>
+        <div class="feed-ip">${escHtml(e.ip || '—')}</div>
+        <div class="feed-type">${escHtml(e.attack_type || 'Normal')}</div>
         <div style="font-size:10px;color:#3a4a65;font-family:var(--mono);margin-top:2px;">
-          🌐 ${e.browser || '?'} &nbsp;|&nbsp; 🖥 ${e.operating_system || '?'} &nbsp;|&nbsp; 📎 ${e.referrer || 'Direct'}
+          🌐 ${escHtml(e.browser || '?')} &nbsp;|&nbsp; 🖥 ${escHtml(e.operating_system || '?')} &nbsp;|&nbsp; 📎 ${escHtml(e.referrer || 'Direct')}
         </div>
         <div class="feed-payload">${escHtml(e.payload || '').substring(0,60)}</div>
       </div>
-      <div class="feed-country">${e.country || '?'}</div>
+      <div class="feed-country">${escHtml(e.country || '?')}</div>
       <div class="feed-time">${formatTime(e.timestamp)}</div>
     </div>
-  `).join('');
+  `}).join('');
 }
 
 function updateCountries(countries) {
@@ -1164,11 +1191,11 @@ function updateCountries(countries) {
   const max = Math.max(...entries.map(([,v]) => v));
   list.innerHTML = entries.map(([country, count]) => `
     <div class="country-item">
-      <span class="country-name">${country}</span>
+      <span class="country-name">${escHtml(country)}</span>
       <div class="country-bar-wrap">
         <div class="country-bar" style="width:${Math.round(count/max*100)}%"></div>
       </div>
-      <span class="country-count">${count}</span>
+      <span class="country-count">${parseInt(count,10)||0}</span>
     </div>
   `).join('');
 }
@@ -1184,7 +1211,12 @@ function formatTime(ts) {
 }
 
 function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#x27;');
 }
 
 function updateClock() {

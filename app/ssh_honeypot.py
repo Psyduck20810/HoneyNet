@@ -6,6 +6,18 @@ import os
 import sys
 import time
 
+# ── Alert throttle: max 1 alert per IP per 5 minutes ──────
+_alert_last_sent = {}   # {ip: timestamp}
+_ALERT_COOLDOWN  = 300  # seconds
+
+def _should_alert(ip: str) -> bool:
+    now = time.time()
+    last = _alert_last_sent.get(ip, 0)
+    if now - last >= _ALERT_COOLDOWN:
+        _alert_last_sent[ip] = now
+        return True
+    return False
+
 # ── Suppress paramiko internal logs ──────────────────────
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
@@ -81,17 +93,20 @@ class SSHHoneypotInterface(paramiko.ServerInterface):
         }
         self.logger.log(entry)
 
-        # Send Telegram + Email alert
-        try:
-            import sys, os
-            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-            from alerts import send_alert
-            from email_alert import send_email_alert
-            send_alert(entry)
-            send_email_alert(entry)
-            print(f"[SSH Honeypot] Alerts sent for {client_ip}")
-        except Exception as e:
-            print(f"[SSH Honeypot] Alert error: {e}")
+        # Send Telegram + Email alert (throttled: max 1 per IP per 5 min)
+        if _should_alert(self.client_ip):
+            try:
+                import sys, os
+                sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                from alerts import send_alert
+                from email_alert import send_email_alert
+                send_alert(entry)
+                send_email_alert(entry)
+                print(f"[SSH Honeypot] Alerts sent for {self.client_ip}")
+            except Exception as e:
+                print(f"[SSH Honeypot] Alert error: {e}")
+        else:
+            print(f"[SSH Honeypot] Alert suppressed for {self.client_ip} (throttled)")
 
         # Accept on 2nd attempt to make attacker think they succeeded
         if self.auth_attempts >= 2:

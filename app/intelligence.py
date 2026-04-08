@@ -38,6 +38,7 @@ XSS_PATTERNS = [
 PATH_TRAVERSAL_PATTERNS = [
     r"\.\./",                                            # ../
     r"%2e%2e%2f",                                        # URL encoded ../
+    r"%00",                                              # Null-byte evasion
     r"\.\.\\",                                           # ..\
     r"/etc/passwd",                                      # Linux sensitive
     r"c:\\windows",                                      # Windows path
@@ -54,7 +55,7 @@ COMMAND_INJECTION_PATTERNS = [
 
 RISK_SCORES = {
     "SQL Injection":        9,
-    "XSS":                  7,
+    "XSS Attack":           7,
     "Command Injection":    10,
     "Path Traversal":       8,
     "Brute Force":          6,
@@ -99,7 +100,7 @@ class IntelligenceEngine:
             matched_pattern = self._get_match(payload_lower, PATH_TRAVERSAL_PATTERNS)
 
         elif self._match(payload_lower, XSS_PATTERNS):
-            attack_type = "XSS"
+            attack_type = "XSS Attack"
             matched_pattern = self._get_match(payload_lower, XSS_PATTERNS)
 
         elif login_count >= 5:
