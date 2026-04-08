@@ -172,30 +172,10 @@ Submit login 5+ times in under 1 minute.
 
 ---
 
-## 🎯 Viva Demo Script
-
-1. Open the honeypot URL
-2. Enter a SQL injection payload → show "Login Failed"
-3. Open logs/attack.log → show the captured entry
-4. Open /dashboard → show real-time charts updating
-5. Show Telegram alert received
-6. Explain architecture diagram
-
----
-
 ## 🏗️ System Architecture
 
 ![IHaaS System Architecture](IHaaS%20System%20Architecture%20Diagram.jpg)
 
 > *Fig. 1. IHaaS System Architecture Diagram*
 
----
 
-## 👥 Team Members
-
-| Name | Role |
-|---|---|
-| Anannya Manwar | ML Anomaly Detection, Threat Intelligence |
-| Aditya Chaskar | SSH / DB / Email Honeypot, Blockchain Logging |
-| Anish Kharat | Flask Web App, Dashboard, Attack Detection Engine |
-| Vedant Patil | Geolocation, Alerts (Telegram & Email), Docker & AWS Deployment |
